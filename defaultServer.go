@@ -7,7 +7,7 @@ import (
 
 type defaultServer struct{}
 
-func (ds *defaultServer) Register(endpoints []Endpoint) {
+func (ds *defaultServer) Register(endpoints []*Endpoint) {
 	for _, endpoint := range endpoints {
 		http.DefaultServeMux.HandleFunc(endpoint.Path(), endpoint.Handler())
 	}
