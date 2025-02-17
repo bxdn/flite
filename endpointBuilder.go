@@ -6,7 +6,7 @@ import (
 	"strings"
 )
 
-type Endpoint struct {
+type endpoint struct {
 	getHandlers    []RequestNode
 	postHandlers   []RequestNode
 	deleteHandlers []RequestNode
@@ -15,21 +15,21 @@ type Endpoint struct {
 	path           string
 }
 
-func CreateEndpoint(path string) *Endpoint {
-	builder := Endpoint{}
+func CreateEndpoint(path string) *endpoint {
+	builder := endpoint{}
 	builder.path = path
 	return &builder
 }
 
-func (e *Endpoint) Path() string {
+func (e *endpoint) Path() string {
 	return e.path
 }
 
-func (e *Endpoint) Handler() RequestHandler {
+func (e *endpoint) Handler() RequestHandler {
 	return e.handleRequest
 }
 
-func (e *Endpoint) GET(handlers ...RequestNode) *Endpoint {
+func (e *endpoint) GET(handlers ...RequestNode) *endpoint {
 	e.getHandlers = handlers
 	if !(strings.Contains(e.allowedMethods, "GET")) {
 		if e.allowedMethods != "" {
@@ -40,7 +40,7 @@ func (e *Endpoint) GET(handlers ...RequestNode) *Endpoint {
 	return e
 }
 
-func (e *Endpoint) POST(handlers ...RequestNode) *Endpoint {
+func (e *endpoint) POST(handlers ...RequestNode) *endpoint {
 	e.postHandlers = handlers
 	if !(strings.Contains(e.allowedMethods, "POST")) {
 		if e.allowedMethods != "" {
@@ -51,7 +51,7 @@ func (e *Endpoint) POST(handlers ...RequestNode) *Endpoint {
 	return e
 }
 
-func (e *Endpoint) DELETE(handlers ...RequestNode) *Endpoint {
+func (e *endpoint) DELETE(handlers ...RequestNode) *endpoint {
 	e.deleteHandlers = handlers
 	if !(strings.Contains(e.allowedMethods, "DELETE")) {
 		if e.allowedMethods != "" {
@@ -62,7 +62,7 @@ func (e *Endpoint) DELETE(handlers ...RequestNode) *Endpoint {
 	return e
 }
 
-func (e *Endpoint) PUT(handlers ...RequestNode) *Endpoint {
+func (e *endpoint) PUT(handlers ...RequestNode) *endpoint {
 	e.putHandlers = handlers
 	if !(strings.Contains(e.allowedMethods, "PUT")) {
 		if e.allowedMethods != "" {
@@ -73,7 +73,7 @@ func (e *Endpoint) PUT(handlers ...RequestNode) *Endpoint {
 	return e
 }
 
-func (e *Endpoint) executeEndpointPipeline(w http.ResponseWriter, r *http.Request, handlers []RequestNode) {
+func (e *endpoint) executeEndpointPipeline(w http.ResponseWriter, r *http.Request, handlers []RequestNode) {
 	for _, handler := range handlers {
 		ctx, e := handler(w, r)
 		if e != nil {
@@ -84,7 +84,7 @@ func (e *Endpoint) executeEndpointPipeline(w http.ResponseWriter, r *http.Reques
 	}
 }
 
-func (e *Endpoint) get(w http.ResponseWriter, r *http.Request) {
+func (e *endpoint) get(w http.ResponseWriter, r *http.Request) {
 	if e.getHandlers == nil {
 		w.Header().Set("Allow", e.allowedMethods)
 		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
@@ -93,7 +93,7 @@ func (e *Endpoint) get(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (e *Endpoint) post(w http.ResponseWriter, r *http.Request) {
+func (e *endpoint) post(w http.ResponseWriter, r *http.Request) {
 	if e.postHandlers == nil {
 		w.Header().Set("Allow", e.allowedMethods)
 		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
@@ -102,7 +102,7 @@ func (e *Endpoint) post(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (e *Endpoint) delete(w http.ResponseWriter, r *http.Request) {
+func (e *endpoint) delete(w http.ResponseWriter, r *http.Request) {
 	if e.deleteHandlers == nil {
 		w.Header().Set("Allow", e.allowedMethods)
 		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
@@ -111,7 +111,7 @@ func (e *Endpoint) delete(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (e *Endpoint) put(w http.ResponseWriter, r *http.Request) {
+func (e *endpoint) put(w http.ResponseWriter, r *http.Request) {
 	if e.putHandlers == nil {
 		w.Header().Set("Allow", e.allowedMethods)
 		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
@@ -120,7 +120,7 @@ func (e *Endpoint) put(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (e *Endpoint) handleRequest(w http.ResponseWriter, r *http.Request) {
+func (e *endpoint) handleRequest(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 	w.Header().Set("Access-Control-Allow-Headers", "*")
 	w.Header().Set("Access-Control-Allow-Methods", e.allowedMethods)
