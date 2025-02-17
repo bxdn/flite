@@ -1,4 +1,4 @@
-package common
+package flite
 
 type Document interface {
 	Data() map[string]interface{}

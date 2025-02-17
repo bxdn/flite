@@ -1,4 +1,4 @@
-package common
+package flite
 
 type RS interface {
 	Endpoints() []Endpoint
