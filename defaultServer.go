@@ -9,12 +9,12 @@ type defaultServer struct{}
 
 func (ds *defaultServer) Register(endpoints []Endpoint) {
 	for _, endpoint := range endpoints {
-		http.DefaultServeMux.HandleFunc(endpoint.path, endpoint.handler)
+		http.DefaultServeMux.HandleFunc(endpoint.Path(), endpoint.Handler())
 	}
 }
 
-func (ds *defaultServer) Serve(port int) {
-	http.ListenAndServe(fmt.Sprintf(":%d", port), http.DefaultServeMux)
+func (ds *defaultServer) Serve(port int) error {
+	return http.ListenAndServe(fmt.Sprintf(":%d", port), http.DefaultServeMux)
 }
 
 var DefaultServer = &defaultServer{}

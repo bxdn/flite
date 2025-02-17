@@ -6,7 +6,7 @@ import (
 	"strings"
 )
 
-type endpointHandler struct {
+type Endpoint struct {
 	getHandlers    []RequestNode
 	postHandlers   []RequestNode
 	deleteHandlers []RequestNode
@@ -15,54 +15,21 @@ type endpointHandler struct {
 	path           string
 }
 
-func (e *endpointHandler) executeEndpointPipeline(w http.ResponseWriter, r *http.Request, handlers []RequestNode) {
-	for _, handler := range handlers {
-		ctx, e := handler(w, r)
-		if e != nil {
-			log.Println(e)
-			return
-		}
-		r = r.WithContext(ctx)
-	}
+func CreateEndpoint(path string) *Endpoint {
+	builder := Endpoint{}
+	builder.path = path
+	return &builder
 }
 
-func (e *endpointHandler) Get(w http.ResponseWriter, r *http.Request) {
-	if e.getHandlers == nil {
-		w.Header().Set("Allow", e.allowedMethods)
-		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
-	} else {
-		e.executeEndpointPipeline(w, r, e.getHandlers)
-	}
+func (e *Endpoint) Path() string {
+	return e.path
 }
 
-func (e *endpointHandler) Post(w http.ResponseWriter, r *http.Request) {
-	if e.postHandlers == nil {
-		w.Header().Set("Allow", e.allowedMethods)
-		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
-	} else {
-		e.executeEndpointPipeline(w, r, e.postHandlers)
-	}
+func (e *Endpoint) Handler() RequestHandler {
+	return e.handleRequest
 }
 
-func (e *endpointHandler) Delete(w http.ResponseWriter, r *http.Request) {
-	if e.deleteHandlers == nil {
-		w.Header().Set("Allow", e.allowedMethods)
-		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
-	} else {
-		e.executeEndpointPipeline(w, r, e.deleteHandlers)
-	}
-}
-
-func (e *endpointHandler) Put(w http.ResponseWriter, r *http.Request) {
-	if e.putHandlers == nil {
-		w.Header().Set("Allow", e.allowedMethods)
-		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
-	} else {
-		e.executeEndpointPipeline(w, r, e.putHandlers)
-	}
-}
-
-func (e *endpointHandler) GET(handlers ...RequestNode) *endpointHandler {
+func (e *Endpoint) GET(handlers ...RequestNode) *Endpoint {
 	e.getHandlers = handlers
 	if !(strings.Contains(e.allowedMethods, "GET")) {
 		if e.allowedMethods != "" {
@@ -73,7 +40,7 @@ func (e *endpointHandler) GET(handlers ...RequestNode) *endpointHandler {
 	return e
 }
 
-func (e *endpointHandler) POST(handlers ...RequestNode) *endpointHandler {
+func (e *Endpoint) POST(handlers ...RequestNode) *Endpoint {
 	e.postHandlers = handlers
 	if !(strings.Contains(e.allowedMethods, "POST")) {
 		if e.allowedMethods != "" {
@@ -84,7 +51,7 @@ func (e *endpointHandler) POST(handlers ...RequestNode) *endpointHandler {
 	return e
 }
 
-func (e *endpointHandler) DELETE(handlers ...RequestNode) *endpointHandler {
+func (e *Endpoint) DELETE(handlers ...RequestNode) *Endpoint {
 	e.deleteHandlers = handlers
 	if !(strings.Contains(e.allowedMethods, "DELETE")) {
 		if e.allowedMethods != "" {
@@ -95,7 +62,7 @@ func (e *endpointHandler) DELETE(handlers ...RequestNode) *endpointHandler {
 	return e
 }
 
-func (e *endpointHandler) PUT(handlers ...RequestNode) *endpointHandler {
+func (e *Endpoint) PUT(handlers ...RequestNode) *Endpoint {
 	e.putHandlers = handlers
 	if !(strings.Contains(e.allowedMethods, "PUT")) {
 		if e.allowedMethods != "" {
@@ -106,29 +73,66 @@ func (e *endpointHandler) PUT(handlers ...RequestNode) *endpointHandler {
 	return e
 }
 
-func (e *endpointHandler) Build() Endpoint {
-	return Endpoint{e.path, e.handleRequest}
+func (e *Endpoint) executeEndpointPipeline(w http.ResponseWriter, r *http.Request, handlers []RequestNode) {
+	for _, handler := range handlers {
+		ctx, e := handler(w, r)
+		if e != nil {
+			log.Println(e)
+			return
+		}
+		r = r.WithContext(ctx)
+	}
 }
 
-func CreateEndpointBuilder(path string) *endpointHandler {
-	builder := endpointHandler{}
-	builder.path = path
-	return &builder
+func (e *Endpoint) get(w http.ResponseWriter, r *http.Request) {
+	if e.getHandlers == nil {
+		w.Header().Set("Allow", e.allowedMethods)
+		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+	} else {
+		e.executeEndpointPipeline(w, r, e.getHandlers)
+	}
 }
 
-func (e *endpointHandler) handleRequest(w http.ResponseWriter, r *http.Request) {
+func (e *Endpoint) post(w http.ResponseWriter, r *http.Request) {
+	if e.postHandlers == nil {
+		w.Header().Set("Allow", e.allowedMethods)
+		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+	} else {
+		e.executeEndpointPipeline(w, r, e.postHandlers)
+	}
+}
+
+func (e *Endpoint) delete(w http.ResponseWriter, r *http.Request) {
+	if e.deleteHandlers == nil {
+		w.Header().Set("Allow", e.allowedMethods)
+		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+	} else {
+		e.executeEndpointPipeline(w, r, e.deleteHandlers)
+	}
+}
+
+func (e *Endpoint) put(w http.ResponseWriter, r *http.Request) {
+	if e.putHandlers == nil {
+		w.Header().Set("Allow", e.allowedMethods)
+		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+	} else {
+		e.executeEndpointPipeline(w, r, e.putHandlers)
+	}
+}
+
+func (e *Endpoint) handleRequest(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 	w.Header().Set("Access-Control-Allow-Headers", "*")
 	w.Header().Set("Access-Control-Allow-Methods", e.allowedMethods)
 	switch r.Method {
 	case http.MethodGet:
-		e.Get(w, r)
+		e.get(w, r)
 	case http.MethodPost:
-		e.Post(w, r)
+		e.post(w, r)
 	case http.MethodDelete:
-		e.Delete(w, r)
+		e.delete(w, r)
 	case http.MethodPut:
-		e.Put(w, r)
+		e.put(w, r)
 	case http.MethodOptions:
 		w.Header().Set("Allow", e.allowedMethods)
 		w.WriteHeader(http.StatusNoContent)
