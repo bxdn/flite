@@ -1,3 +1,3 @@
-module github.com/bxdn/flite/v2
+module github.com/bxdn/flite
 
 go 1.23.5
