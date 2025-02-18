@@ -2,7 +2,6 @@ package flite
 
 import (
 	"encoding/json"
-	"reflect"
 )
 
 func JsonMapToType[T any](obj map[string]any) (*T, error) {
@@ -23,8 +22,4 @@ func TypeToJsonMap(obj any) (map[string]any, error) {
 	m := map[string]any{}
 	e = json.Unmarshal(data, &m)
 	return m, e
-}
-
-func Type[T any]() reflect.Type {
-	return reflect.TypeOf((*T)(nil)).Elem()
 }

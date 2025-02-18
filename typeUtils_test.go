@@ -2,23 +2,12 @@ package flite
 
 import (
 	"context"
-	"reflect"
 	"testing"
 )
 
 type test struct {
 	X string `json:"x"`
 	Y int    `json:"y"`
-}
-
-func TestTypeUtils(t *testing.T) {
-	var i int
-	if Type[int]() != reflect.TypeOf(i) {
-		t.Errorf("expected int, got %v", Type[int]())
-	}
-	if Type[string]() == reflect.TypeOf(i) {
-		t.Errorf("expected int and string to be different")
-	}
 }
 
 func TestGetFromContext(t *testing.T) {

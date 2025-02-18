@@ -6,7 +6,6 @@ import (
 	"errors"
 	"log"
 	"net/http"
-	"reflect"
 )
 
 type jsonKey struct{}
@@ -20,9 +19,9 @@ func Deserialize[T any](ctx context.Context) (*T, error) {
 	return typed, nil
 }
 
-func Json(typ reflect.Type) RequestNode {
+func Json[T any]() RequestNode {
 	return func(w http.ResponseWriter, r *http.Request) (context.Context, error) {
-		ptr := reflect.New(typ).Interface()
+		ptr := new(T)
 		decoder := json.NewDecoder(r.Body)
 		if e := decoder.Decode(ptr); e != nil {
 			log.Println(e)
