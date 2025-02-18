@@ -5,8 +5,6 @@ import (
 	"net/http"
 )
 
-type defaultServer struct{}
-
 type Endpoint interface {
 	Path() string
 	Handler() RequestHandler

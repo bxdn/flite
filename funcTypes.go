@@ -5,6 +5,6 @@ import (
 	"net/http"
 )
 
-type RequestHandler func(http.ResponseWriter, *http.Request)
+type RequestHandler = func(http.ResponseWriter, *http.Request)
 
-type RequestNode func(http.ResponseWriter, *http.Request) (context.Context, error)
+type RequestNode = func(http.ResponseWriter, *http.Request) (context.Context, error)
