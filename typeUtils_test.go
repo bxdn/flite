@@ -13,7 +13,7 @@ type test struct {
 func TestGetFromContext(t *testing.T) {
 	x := 5
 	ctx := context.WithValue(context.Background(), jsonKey{}, &x)
-	val, e := Deserialize[int](ctx)
+	val, e := GetTypedBody[int](ctx)
 	if e != nil {
 		t.Error(e)
 	}
@@ -25,7 +25,7 @@ func TestGetFromContext(t *testing.T) {
 func TestGetFromContextError(t *testing.T) {
 	x := 5
 	ctx := context.WithValue(context.Background(), jsonKey{}, &x)
-	_, e := Deserialize[string](ctx)
+	_, e := GetTypedBody[string](ctx)
 	if e == nil {
 		t.Errorf("expected an error, but did not get one")
 	}

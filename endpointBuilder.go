@@ -13,12 +13,7 @@ type endpoint struct {
 	putHandlers    []RequestNode
 	allowedMethods string
 	path           string
-}
-
-func CreateEndpoint(path string) *endpoint {
-	builder := endpoint{}
-	builder.path = path
-	return &builder
+	f              *flite
 }
 
 func (e *endpoint) Path() string {
@@ -75,7 +70,9 @@ func (e *endpoint) PUT(handlers ...RequestNode) *endpoint {
 
 func (e *endpoint) executeEndpointPipeline(w http.ResponseWriter, r *http.Request, handlers []RequestNode) {
 	for _, handler := range handlers {
-		ctx, e := handler(w, r)
+		e.f.w = w
+		e.f.r = r
+		ctx, e := handler(e.f)
 		if e != nil {
 			log.Println(e)
 			return
