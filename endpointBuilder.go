@@ -72,12 +72,14 @@ func (e *endpoint) executeEndpointPipeline(w http.ResponseWriter, r *http.Reques
 	for _, handler := range handlers {
 		e.f.Res = w
 		e.f.Req = r
-		ctx, e := handler(e.f)
-		if e != nil {
+		if e := handler(e.f); e != nil {
 			log.Println(e)
 			return
 		}
-		r = r.WithContext(ctx)
+		if e.f.ctx == nil {
+			r = r.WithContext(e.f.ctx)
+			e.f.ctx = nil
+		}
 	}
 }
 

@@ -19,13 +19,14 @@ func GetTypedBody[T any](ctx context.Context) (*T, error) {
 	return typed, nil
 }
 
-func Json[T any](f *Flite) (context.Context, error) {
+func Json[T any](f *Flite) error {
 	ptr := new(T)
 	decoder := json.NewDecoder(f.Req.Body)
 	if e := decoder.Decode(ptr); e != nil {
 		log.Println(e)
 		http.Error(f.Res, "bad request", http.StatusBadRequest)
-		return f.Req.Context(), e
+		return e
 	}
-	return context.WithValue(f.Req.Context(), jsonKey{}, ptr), nil
+	f.Context(context.WithValue(f.Req.Context(), jsonKey{}, ptr))
+	return nil
 }

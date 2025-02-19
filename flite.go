@@ -1,6 +1,7 @@
 package flite
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 )
@@ -14,6 +15,7 @@ type Flite struct {
 	Res http.ResponseWriter
 	Req *http.Request
 	m   *http.ServeMux
+	ctx context.Context
 }
 
 func NewFlite() *Flite {
@@ -37,4 +39,8 @@ func (f *Flite) Register(endpoints ...Endpoint) {
 
 func (f *Flite) Serve(port int) error {
 	return http.ListenAndServe(fmt.Sprintf(":%d", port), f.m)
+}
+
+func (f *Flite) Context(context context.Context) {
+	f.ctx = context
 }

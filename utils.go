@@ -27,3 +27,7 @@ func (f *Flite) ReturnJSON(object any) {
 		http.Error(f.Res, "internal server error", http.StatusInternalServerError)
 	}
 }
+
+func (f *Flite) ReturnError(message string, status int) {
+	http.Error(f.Res, message, status)
+}
