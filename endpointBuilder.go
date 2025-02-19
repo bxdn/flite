@@ -76,7 +76,7 @@ func (e *endpoint) executeEndpointPipeline(w http.ResponseWriter, r *http.Reques
 			log.Println(e)
 			return
 		}
-		if e.f.ctx == nil {
+		if e.f.ctx != nil {
 			r = r.WithContext(e.f.ctx)
 			e.f.ctx = nil
 		}
