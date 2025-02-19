@@ -19,7 +19,7 @@ func GetTypedBody[T any](ctx context.Context) (*T, error) {
 	return typed, nil
 }
 
-func Json[T any](f *flite) (context.Context, error) {
+func Json[T any](f *Flite) (context.Context, error) {
 	ptr := new(T)
 	decoder := json.NewDecoder(f.r.Body)
 	if e := decoder.Decode(ptr); e != nil {

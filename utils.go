@@ -6,7 +6,7 @@ import (
 	"net/http"
 )
 
-func (f *flite) ReturnText(message string) {
+func (f *Flite) ReturnText(message string) {
 	_, e := f.w.Write([]byte(message))
 	if e != nil {
 		log.Println(e)
@@ -14,7 +14,7 @@ func (f *flite) ReturnText(message string) {
 	}
 }
 
-func (f *flite) ReturnJSON(object any) {
+func (f *Flite) ReturnJSON(object any) {
 	jsonBytes, err := json.Marshal(object)
 	if err != nil {
 		log.Println(err)

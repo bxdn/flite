@@ -13,7 +13,7 @@ type endpoint struct {
 	putHandlers    []RequestNode
 	allowedMethods string
 	path           string
-	f              *flite
+	f              *Flite
 }
 
 func (e *endpoint) Path() string {
