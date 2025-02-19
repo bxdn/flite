@@ -70,8 +70,8 @@ func (e *endpoint) PUT(handlers ...RequestNode) *endpoint {
 
 func (e *endpoint) executeEndpointPipeline(w http.ResponseWriter, r *http.Request, handlers []RequestNode) {
 	for _, handler := range handlers {
-		e.f.w = w
-		e.f.r = r
+		e.f.Res = w
+		e.f.Req = r
 		ctx, e := handler(e.f)
 		if e != nil {
 			log.Println(e)

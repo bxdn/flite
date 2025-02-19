@@ -11,9 +11,9 @@ type Endpoint interface {
 }
 
 type Flite struct {
-	w http.ResponseWriter
-	r *http.Request
-	m *http.ServeMux
+	Res http.ResponseWriter
+	Req *http.Request
+	m   *http.ServeMux
 }
 
 func NewFlite() *Flite {

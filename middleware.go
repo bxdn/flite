@@ -21,11 +21,11 @@ func GetTypedBody[T any](ctx context.Context) (*T, error) {
 
 func Json[T any](f *Flite) (context.Context, error) {
 	ptr := new(T)
-	decoder := json.NewDecoder(f.r.Body)
+	decoder := json.NewDecoder(f.Req.Body)
 	if e := decoder.Decode(ptr); e != nil {
 		log.Println(e)
-		http.Error(f.w, "bad request", http.StatusBadRequest)
-		return f.r.Context(), e
+		http.Error(f.Res, "bad request", http.StatusBadRequest)
+		return f.Req.Context(), e
 	}
-	return context.WithValue(f.r.Context(), jsonKey{}, ptr), nil
+	return context.WithValue(f.Req.Context(), jsonKey{}, ptr), nil
 }
