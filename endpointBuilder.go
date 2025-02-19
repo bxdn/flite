@@ -13,7 +13,6 @@ type endpoint struct {
 	putHandlers    []RequestNode
 	allowedMethods string
 	path           string
-	f              *Flite
 }
 
 func (e *endpoint) Path() string {
@@ -69,16 +68,17 @@ func (e *endpoint) PUT(handlers ...RequestNode) *endpoint {
 }
 
 func (e *endpoint) executeEndpointPipeline(w http.ResponseWriter, r *http.Request, handlers []RequestNode) {
+	f := Flite{w, r, nil}
 	for _, handler := range handlers {
-		e.f.Res = w
-		e.f.Req = r
-		if e := handler(e.f); e != nil {
+		f.Res = w
+		f.Req = r
+		if e := handler(&f); e != nil {
 			log.Println(e)
 			return
 		}
-		if e.f.ctx != nil {
-			r = r.WithContext(e.f.ctx)
-			e.f.ctx = nil
+		if f.ctx != nil {
+			r = r.WithContext(f.ctx)
+			f.ctx = nil
 		}
 	}
 }

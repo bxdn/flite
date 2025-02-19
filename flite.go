@@ -11,34 +11,36 @@ type Endpoint interface {
 	Handler() RequestHandler
 }
 
-type Flite struct {
-	Res http.ResponseWriter
-	Req *http.Request
-	m   *http.ServeMux
-	ctx context.Context
+func CreateEndpoint(path string) *endpoint {
+	ep := endpoint{}
+	ep.path = path
+	return &ep
 }
 
-func NewFlite() *Flite {
-	f := Flite{}
-	f.m = http.NewServeMux()
-	return &f
+type Server struct {
+	m *http.ServeMux
 }
 
-func (f *Flite) CreateEndpoint(path string) *endpoint {
-	builder := endpoint{}
-	builder.path = path
-	builder.f = f
-	return &builder
+func NewFliteServer() *Server {
+	s := Server{}
+	s.m = http.NewServeMux()
+	return &s
 }
 
-func (f *Flite) Register(endpoints ...Endpoint) {
+func (s *Server) Register(endpoints ...Endpoint) {
 	for _, endpoint := range endpoints {
-		f.m.HandleFunc(endpoint.Path(), endpoint.Handler())
+		s.m.HandleFunc(endpoint.Path(), endpoint.Handler())
 	}
 }
 
-func (f *Flite) Serve(port int) error {
-	return http.ListenAndServe(fmt.Sprintf(":%d", port), f.m)
+func (s *Server) Serve(port int) error {
+	return http.ListenAndServe(fmt.Sprintf(":%d", port), s.m)
+}
+
+type Flite struct {
+	Res http.ResponseWriter
+	Req *http.Request
+	ctx context.Context
 }
 
 func (f *Flite) Context(context context.Context) {
