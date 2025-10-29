@@ -68,5 +68,9 @@ func (f *Flite) SetContext(context context.Context) {
 }
 
 func (f *Flite) AddContext(key, value any) {
-	f.ctx = context.WithValue(f.ctx, key, value)
+	if f.ctx == nil {
+		f.ctx = context.WithValue(f.Req.Context(), key, value)
+	} else {
+		f.ctx = context.WithValue(f.ctx, key, value)
+	}
 }
