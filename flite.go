@@ -9,31 +9,51 @@ import (
 type Endpoint interface {
 	Path() string
 	Handler() RequestHandler
+	GET(handlers ...RequestNode) Endpoint
+	POST(handlers ...RequestNode) Endpoint
+	DELETE(handlers ...RequestNode) Endpoint
+	PUT(handlers ...RequestNode) Endpoint
 }
 
-func CreateEndpoint(path string) *endpoint {
+type Server interface {
+	Register(endpoints ...Endpoint)
+	Serve(port int) error
+}
+
+// Creates an endpoint from a given path.
+//
+// Uses ServeMux path syntax.
+func CreateEndpoint(path string) Endpoint {
 	ep := endpoint{}
 	ep.path = path
 	return &ep
 }
 
-type Server struct {
+type server struct {
 	m *http.ServeMux
 }
 
-func NewFliteServer() *Server {
-	s := Server{}
-	s.m = http.NewServeMux()
+// Creates a server using a new serve mux.
+func NewProdServer() Server {
+	s := server{http.NewServeMux()}
 	return &s
 }
 
-func (s *Server) Register(endpoints ...Endpoint) {
+// Creates a server using the default serve mux under the hood, exposing the bells and whistles.
+// 
+// Not recommended for production.
+func NewDevServer() Server {
+	s := server{http.DefaultServeMux}
+	return &s
+}
+
+func (s *server) Register(endpoints ...Endpoint) {
 	for _, endpoint := range endpoints {
 		s.m.HandleFunc(endpoint.Path(), endpoint.Handler())
 	}
 }
 
-func (s *Server) Serve(port int) error {
+func (s *server) Serve(port int) error {
 	return http.ListenAndServe(fmt.Sprintf(":%d", port), s.m)
 }
 

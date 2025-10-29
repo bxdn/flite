@@ -23,7 +23,7 @@ func (e *endpoint) Handler() RequestHandler {
 	return e.handleRequest
 }
 
-func (e *endpoint) GET(handlers ...RequestNode) *endpoint {
+func (e *endpoint) GET(handlers ...RequestNode) Endpoint {
 	e.getHandlers = handlers
 	if !(strings.Contains(e.allowedMethods, "GET")) {
 		if e.allowedMethods != "" {
@@ -34,7 +34,7 @@ func (e *endpoint) GET(handlers ...RequestNode) *endpoint {
 	return e
 }
 
-func (e *endpoint) POST(handlers ...RequestNode) *endpoint {
+func (e *endpoint) POST(handlers ...RequestNode) Endpoint {
 	e.postHandlers = handlers
 	if !(strings.Contains(e.allowedMethods, "POST")) {
 		if e.allowedMethods != "" {
@@ -45,7 +45,7 @@ func (e *endpoint) POST(handlers ...RequestNode) *endpoint {
 	return e
 }
 
-func (e *endpoint) DELETE(handlers ...RequestNode) *endpoint {
+func (e *endpoint) DELETE(handlers ...RequestNode) Endpoint {
 	e.deleteHandlers = handlers
 	if !(strings.Contains(e.allowedMethods, "DELETE")) {
 		if e.allowedMethods != "" {
@@ -56,7 +56,7 @@ func (e *endpoint) DELETE(handlers ...RequestNode) *endpoint {
 	return e
 }
 
-func (e *endpoint) PUT(handlers ...RequestNode) *endpoint {
+func (e *endpoint) PUT(handlers ...RequestNode) Endpoint {
 	e.putHandlers = handlers
 	if !(strings.Contains(e.allowedMethods, "PUT")) {
 		if e.allowedMethods != "" {
