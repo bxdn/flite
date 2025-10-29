@@ -27,6 +27,6 @@ func Json[T any](f *Flite) error {
 		http.Error(f.Res, "bad request", http.StatusBadRequest)
 		return e
 	}
-	f.Context(context.WithValue(f.Req.Context(), jsonKey{}, ptr))
+	f.AddContext(jsonKey{}, ptr)
 	return nil
 }

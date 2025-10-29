@@ -63,6 +63,10 @@ type Flite struct {
 	ctx context.Context
 }
 
-func (f *Flite) Context(context context.Context) {
+func (f *Flite) SetContext(context context.Context) {
 	f.ctx = context
+}
+
+func (f *Flite) AddContext(key, value any) {
+	f.ctx = context.WithValue(f.ctx, key, value)
 }
