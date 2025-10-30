@@ -6,17 +6,9 @@ import (
 	"strings"
 )
 
-type BasicEndpoint interface {
+type Endpoint interface {
 	Path() string
 	Handler() RequestHandler
-}
-
-type Endpoint[T any] interface {
-	BasicEndpoint
-	GET(handlers ...RequestNode[T]) Endpoint[T]
-	POST(handlers ...RequestNode[T]) Endpoint[T]
-	DELETE(handlers ...RequestNode[T]) Endpoint[T]
-	PUT(handlers ...RequestNode[T]) Endpoint[T]
 }
 
 type endpoint[T any] struct {
@@ -31,13 +23,13 @@ type endpoint[T any] struct {
 // Creates an endpoint from a given path.
 //
 // Uses ServeMux path syntax.
-func CreateEndpoint(path string) Endpoint[string] {
+func CreateEndpoint(path string) *endpoint[string] {
 	ep := endpoint[string]{}
 	ep.path = path
 	return &ep
 }
 
-func CreateJsonEndpoint[T any](path string) Endpoint[T] {
+func CreateJsonEndpoint[T any](path string) *endpoint[T] {
 	ep := endpoint[T]{}
 	ep.path = path
 	return &ep
@@ -51,25 +43,25 @@ func (e *endpoint[T]) Handler() RequestHandler {
 	return e.handleRequest
 }
 
-func (e *endpoint[T]) GET(handlers ...RequestNode[T]) Endpoint[T] {
+func (e *endpoint[T]) GET(handlers ...RequestNode[T]) *endpoint[T] {
 	e.getHandlers = handlers
 	e.addAllowedMethod("GET")
 	return e
 }
 
-func (e *endpoint[T]) POST(handlers ...RequestNode[T]) Endpoint[T] {
+func (e *endpoint[T]) POST(handlers ...RequestNode[T]) *endpoint[T] {
 	e.postHandlers = handlers
 	e.addAllowedMethod("POST")
 	return e
 }
 
-func (e *endpoint[T]) DELETE(handlers ...RequestNode[T]) Endpoint[T] {
+func (e *endpoint[T]) DELETE(handlers ...RequestNode[T]) *endpoint[T] {
 	e.deleteHandlers = handlers
 	e.addAllowedMethod("DELETE")
 	return e
 }
 
-func (e *endpoint[T]) PUT(handlers ...RequestNode[T]) Endpoint[T] {
+func (e *endpoint[T]) PUT(handlers ...RequestNode[T]) *endpoint[T] {
 	e.putHandlers = handlers
 	e.addAllowedMethod("PUT")
 	return e

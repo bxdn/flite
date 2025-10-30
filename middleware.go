@@ -17,17 +17,15 @@ func (f *Flite[T]) Body() *T {
 	return typed
 }
 
-func Json[T any](e Endpoint[T]) RequestNode[T] {
-	return func(f *Flite[T]) error {
-		ptr := new(T)
-		decoder := json.NewDecoder(f.req.Body)
-		if e := decoder.Decode(ptr); e != nil {
-			if e2 := f.ReturnError("Body is not in the correct JSON schema", http.StatusBadRequest); e2 != nil {
-				return fmt.Errorf("Error returning bad request error: %v", e2)
-			}
-			return nil
+func (e *endpoint[T]) Json(f *Flite[T]) error {
+	ptr := new(T)
+	decoder := json.NewDecoder(f.req.Body)
+	if e := decoder.Decode(ptr); e != nil {
+		if e2 := f.ReturnError("Body is not in the correct JSON schema", http.StatusBadRequest); e2 != nil {
+			return fmt.Errorf("Error returning bad request error: %v", e2)
 		}
-		f.AddContext(jsonKey{}, ptr)
 		return nil
 	}
+	f.AddContext(jsonKey{}, ptr)
+	return nil
 }
