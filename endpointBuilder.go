@@ -11,7 +11,7 @@ type Endpoint interface {
 	Handler() RequestHandler
 }
 
-type Never struct{}
+type never struct{}
 
 type endpoint[T any] struct {
 	handlers    		[]RequestNode[T]
@@ -21,8 +21,8 @@ type endpoint[T any] struct {
 // Creates an endpoint from a given path.
 //
 // Uses ServeMux path syntax.
-func CreateEndpoint(path string) *endpoint[Never] {
-	ep := endpoint[Never]{path: path}
+func CreateEndpoint(path string) *endpoint[never] {
+	ep := endpoint[never]{path: path}
 	return &ep
 }
 
@@ -39,8 +39,8 @@ func (e *endpoint[T]) Handler() RequestHandler {
 	return e.handleRequest
 }
 
-func GET(path string, handlers ...RequestNode[Never]) *endpoint[Never] {
-	e := endpoint[Never]{path: path, handlers: handlers, allowedMethod: "GET"}
+func GET(path string, handlers ...RequestNode[never]) *endpoint[never] {
+	e := endpoint[never]{path: path, handlers: handlers, allowedMethod: "GET"}
 	return &e
 }
 
@@ -54,8 +54,8 @@ func PUT[T any](path string, handlers ...RequestNode[T]) *endpoint[T] {
 	return &e
 }
 
-func DELETE(path string, handlers ...RequestNode[Never]) *endpoint[Never] {
-	e := endpoint[Never]{path: path, handlers: handlers, allowedMethod: "DELETE"}
+func DELETE(path string, handlers ...RequestNode[never]) *endpoint[never] {
+	e := endpoint[never]{path: path, handlers: handlers, allowedMethod: "DELETE"}
 	return &e
 }
 
