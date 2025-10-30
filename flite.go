@@ -22,6 +22,8 @@ func (w *statusCacheResponseWriter) Write(bytes []byte) (int, error) {
 	return w.ResponseWriter.Write(bytes)
 }
 
+type NoBodyFlite Flite[Never]
+
 type Flite[T any] struct {
 	res *statusCacheResponseWriter
 	req *http.Request
