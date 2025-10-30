@@ -11,26 +11,23 @@ type Endpoint interface {
 	Handler() RequestHandler
 }
 
-type never struct{}
+type Never struct{}
 
 type endpoint[T any] struct {
-	handlers    []RequestNode[T]
-	allowedMethod string
-	path           string
+	handlers    		[]RequestNode[T]
+	allowedMethod, path string
 }
 
 // Creates an endpoint from a given path.
 //
 // Uses ServeMux path syntax.
-func CreateEndpoint(path string) *endpoint[never] {
-	ep := endpoint[never]{}
-	ep.path = path
+func CreateEndpoint(path string) *endpoint[Never] {
+	ep := endpoint[Never]{path: path}
 	return &ep
 }
 
 func CreateJsonEndpoint[T any](path string) *endpoint[T] {
-	ep := endpoint[T]{}
-	ep.path = path
+	ep := endpoint[T]{path: path}
 	return &ep
 }
 

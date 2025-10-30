@@ -17,7 +17,7 @@ func (f *Flite[T]) Body() *T {
 	return typed
 }
 
-func (e *endpoint[T]) Json(f *Flite[T]) error {
+func Json[T any](f *Flite[T]) error {
 	ptr := new(T)
 	decoder := json.NewDecoder(f.req.Body)
 	if e := decoder.Decode(ptr); e != nil {
