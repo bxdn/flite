@@ -11,7 +11,8 @@ type Endpoint interface {
 	Handler() func(http.ResponseWriter, *http.Request)
 }
 
-type No struct{}
+type Never struct{}
+type Fn = F[Never]
 
 type endpoint[T any] struct {
 	handlers    		[]func(*F[T]) error
@@ -21,8 +22,8 @@ type endpoint[T any] struct {
 // Creates an endpoint from a given path.
 //
 // Uses ServeMux path syntax.
-func CreateEndpoint(path string) *endpoint[No] {
-	ep := endpoint[No]{path: path}
+func CreateEndpoint(path string) *endpoint[Never] {
+	ep := endpoint[Never]{path: path}
 	return &ep
 }
 
@@ -39,8 +40,8 @@ func (e *endpoint[T]) Handler() func(http.ResponseWriter, *http.Request) {
 	return e.handleRequest
 }
 
-func GET(path string, handlers ...func(*F[No]) error) {
-	e := endpoint[No]{path: path, handlers: handlers, allowedMethod: "GET"}
+func GET(path string, handlers ...func(*Fn) error) {
+	e := endpoint[Never]{path: path, handlers: handlers, allowedMethod: "GET"}
 	defaultServer.endpoints = append(defaultServer.endpoints, &e)
 }
 
@@ -54,8 +55,8 @@ func PUT[T any](path string, handlers ...func(*F[T]) error) {
 	defaultServer.endpoints = append(defaultServer.endpoints, &e)
 }
 
-func DELETE(path string, handlers ...func(*F[No]) error) {
-	e := endpoint[No]{path: path, handlers: handlers, allowedMethod: "DELETE"}
+func DELETE(path string, handlers ...func(*Fn) error) {
+	e := endpoint[Never]{path: path, handlers: handlers, allowedMethod: "DELETE"}
 	defaultServer.endpoints = append(defaultServer.endpoints, &e)
 }
 
