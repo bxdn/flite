@@ -3,18 +3,32 @@ package flite
 import (
 	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
 )
 
 type jsonKey struct{}
 
 func (f *F[T]) Body() *T {
-	val := f.req.Context().Value(jsonKey{})
-	typed, ok := val.(*T)
-	if !ok {
-		panic("Endpoint not configured properly, Json required as middleware to use this method!")
+	var zero T
+    switch any(zero).(type) {
+	case Never:
+		panic("Cannot parse body of endpoint with [Never] type!")
 	}
-	return typed
+	val := f.req.Context().Value(jsonKey{})
+	return val.(*T)
+}
+
+func DeserializeBody[T any]() func(f *F[T]) error {
+	var zero T
+    switch any(zero).(type) {
+    case string:
+        return Text
+	case Never:
+		return func(f *F[T]) error{return nil}
+    default:
+        return Json
+    }
 }
 
 func Json[T any](f *F[T]) error {
@@ -27,5 +41,16 @@ func Json[T any](f *F[T]) error {
 		return nil
 	}
 	f.AddContext(jsonKey{}, ptr)
+	return nil
+}
+
+func Text[T any](f *F[T]) error {
+	bodyBytes, err := io.ReadAll(f.req.Body)
+	if err != nil {
+		return f.ReturnError("Error reading text request body", http.StatusInternalServerError)
+	}
+	defer f.req.Body.Close()
+	bodyString := string(bodyBytes)
+	f.AddContext(jsonKey{}, &bodyString)
 	return nil
 }

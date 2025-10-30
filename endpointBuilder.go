@@ -41,28 +41,33 @@ func (e *endpoint[T]) Handler() func(http.ResponseWriter, *http.Request) {
 }
 
 func GET(path string, handlers ...func(*Fn) error) {
-	e := endpoint[Never]{path: path, handlers: handlers, allowedMethod: "GET"}
+	e := endpoint[Never]{path: path, handlers: injectMiddleware(handlers), allowedMethod: "GET"}
 	defaultServer.endpoints = append(defaultServer.endpoints, &e)
 }
 
 func POST[T any](path string, handlers ...func(*F[T]) error) {
-	e := endpoint[T]{path: path, handlers: handlers, allowedMethod: "POST"}
+	e := endpoint[T]{path: path, handlers: injectMiddleware(handlers), allowedMethod: "POST"}
 	defaultServer.endpoints = append(defaultServer.endpoints, &e)
 }
 
 func PUT[T any](path string, handlers ...func(*F[T]) error) {
-	e := endpoint[T]{path: path, handlers: handlers, allowedMethod: "PUT"}
+	e := endpoint[T]{path: path, handlers: injectMiddleware(handlers), allowedMethod: "PUT"}
 	defaultServer.endpoints = append(defaultServer.endpoints, &e)
 }
 
 func DELETE(path string, handlers ...func(*Fn) error) {
-	e := endpoint[Never]{path: path, handlers: handlers, allowedMethod: "DELETE"}
+	e := endpoint[Never]{path: path, handlers: injectMiddleware(handlers), allowedMethod: "DELETE"}
 	defaultServer.endpoints = append(defaultServer.endpoints, &e)
 }
 
 func PATCH[T any](path string, handlers ...func(*F[T]) error) {
-	e := endpoint[T]{path: path, handlers: handlers, allowedMethod: "PATCH"}
+	e := endpoint[T]{path: path, handlers: injectMiddleware(handlers), allowedMethod: "PATCH"}
 	defaultServer.endpoints = append(defaultServer.endpoints, &e)
+}
+
+func injectMiddleware[T any](rest []func(*F[T]) error) []func(*F[T]) error {
+	handlers := []func(*F[T]) error{DeserializeBody[T]()}
+	return append(handlers, rest...)
 }
 
 func (e *endpoint[T]) executeEndpointPipeline(w http.ResponseWriter, r *http.Request, handlers []func(*F[T]) error) {
