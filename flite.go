@@ -58,9 +58,10 @@ func (s *server) Serve(port int) error {
 }
 
 type Flite struct {
-	Res http.ResponseWriter
-	Req *http.Request
+	res http.ResponseWriter
+	req *http.Request
 	ctx context.Context
+	done bool
 }
 
 func (f *Flite) SetContext(context context.Context) {
@@ -68,9 +69,14 @@ func (f *Flite) SetContext(context context.Context) {
 }
 
 func (f *Flite) AddContext(key, value any) {
-	if f.ctx == nil {
-		f.ctx = context.WithValue(f.Req.Context(), key, value)
-	} else {
-		f.ctx = context.WithValue(f.ctx, key, value)
-	}
+	newCtx := context.WithValue(f.req.Context(), key, value)
+	f.req = f.req.WithContext(newCtx)
+}
+
+func (f *Flite) Req() *http.Request{
+	return f.req
+}
+
+func (f *Flite) Res() http.ResponseWriter {
+	return f.res
 }

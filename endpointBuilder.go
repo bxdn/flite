@@ -1,7 +1,6 @@
 package flite
 
 import (
-	"log"
 	"net/http"
 	"strings"
 )
@@ -68,17 +67,10 @@ func (e *endpoint) PUT(handlers ...RequestNode) Endpoint {
 }
 
 func (e *endpoint) executeEndpointPipeline(w http.ResponseWriter, r *http.Request, handlers []RequestNode) {
-	f := Flite{w, r, nil}
+	f := &Flite{res: w, req: r}
 	for _, handler := range handlers {
-		f.Res = w
-		f.Req = r
-		if e := handler(&f); e != nil {
-			log.Println(e)
+		if handler(f); f.done {
 			return
-		}
-		if f.ctx != nil {
-			r = r.WithContext(f.ctx)
-			f.ctx = nil
 		}
 	}
 }

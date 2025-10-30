@@ -7,12 +7,13 @@ import (
 )
 
 func (f *Flite) ReturnText(message string) error {
-	_, e := f.Res.Write([]byte(message))
+	_, e := f.res.Write([]byte(message))
 	if e != nil {
 		log.Println(e)
 		f.ReturnError("internal server error", http.StatusInternalServerError)
 	}
-	return e
+	f.done = true
+	return nil
 }
 
 func (f *Flite) ReturnJSON(object any) error {
@@ -22,14 +23,20 @@ func (f *Flite) ReturnJSON(object any) error {
 		f.ReturnError("internal server error", http.StatusInternalServerError)
 		return e
 	}
-	_, e = f.Res.Write(jsonBytes)
+	_, e = f.res.Write(jsonBytes)
 	if e != nil {
 		log.Println(e)
 		f.ReturnError("internal server error", http.StatusInternalServerError)
 	}
-	return e
+	f.done = true
+	return nil
 }
 
 func (f *Flite) ReturnError(message string, status int) {
-	http.Error(f.Res, message, status)
+	http.Error(f.res, message, status)
+	f.done = true
+}
+
+func (f *Flite) Return() {
+	f.done = true
 }
