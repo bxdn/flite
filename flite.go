@@ -2,70 +2,34 @@ package flite
 
 import (
 	"context"
-	"fmt"
 	"net/http"
 )
 
-type Endpoint interface {
-	Path() string
-	Handler() RequestHandler
-	GET(handlers ...RequestNode) Endpoint
-	POST(handlers ...RequestNode) Endpoint
-	DELETE(handlers ...RequestNode) Endpoint
-	PUT(handlers ...RequestNode) Endpoint
+type statusCacheResponseWriter struct {
+	http.ResponseWriter
+	status int
 }
 
-type Server interface {
-	Register(endpoints ...Endpoint)
-	Serve(port int) error
+func (w *statusCacheResponseWriter) WriteHeader(status int) {
+	w.status = status
+	w.ResponseWriter.WriteHeader(status)
 }
 
-// Creates an endpoint from a given path.
-//
-// Uses ServeMux path syntax.
-func CreateEndpoint(path string) Endpoint {
-	ep := endpoint{}
-	ep.path = path
-	return &ep
-}
-
-type server struct {
-	m *http.ServeMux
-}
-
-// Creates a server using a new serve mux.
-func NewProdServer() Server {
-	s := server{http.NewServeMux()}
-	return &s
-}
-
-// Creates a server using the default serve mux under the hood, exposing the bells and whistles.
-// 
-// Not recommended for production.
-func NewDevServer() Server {
-	s := server{http.DefaultServeMux}
-	return &s
-}
-
-func (s *server) Register(endpoints ...Endpoint) {
-	for _, endpoint := range endpoints {
-		s.m.HandleFunc(endpoint.Path(), endpoint.Handler())
+func (w *statusCacheResponseWriter) Write(bytes []byte) (int, error) {
+	if w.status == 0 {
+		w.status = 200
 	}
-}
-
-func (s *server) Serve(port int) error {
-	return http.ListenAndServe(fmt.Sprintf(":%d", port), s.m)
+	return w.ResponseWriter.Write(bytes)
 }
 
 type Flite struct {
-	res http.ResponseWriter
+	res *statusCacheResponseWriter
 	req *http.Request
-	ctx context.Context
 	done bool
 }
 
 func (f *Flite) SetContext(context context.Context) {
-	f.ctx = context
+	f.req = f.req.WithContext(context)
 }
 
 func (f *Flite) AddContext(key, value any) {

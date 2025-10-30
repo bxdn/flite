@@ -1,9 +1,19 @@
 package flite
 
 import (
+	"log"
 	"net/http"
 	"strings"
 )
+
+type Endpoint interface {
+	Path() string
+	Handler() RequestHandler
+	GET(handlers ...RequestNode) Endpoint
+	POST(handlers ...RequestNode) Endpoint
+	DELETE(handlers ...RequestNode) Endpoint
+	PUT(handlers ...RequestNode) Endpoint
+}
 
 type endpoint struct {
 	getHandlers    []RequestNode
@@ -12,6 +22,15 @@ type endpoint struct {
 	putHandlers    []RequestNode
 	allowedMethods string
 	path           string
+}
+
+// Creates an endpoint from a given path.
+//
+// Uses ServeMux path syntax.
+func CreateEndpoint(path string) Endpoint {
+	ep := endpoint{}
+	ep.path = path
+	return &ep
 }
 
 func (e *endpoint) Path() string {
@@ -24,53 +43,50 @@ func (e *endpoint) Handler() RequestHandler {
 
 func (e *endpoint) GET(handlers ...RequestNode) Endpoint {
 	e.getHandlers = handlers
-	if !(strings.Contains(e.allowedMethods, "GET")) {
-		if e.allowedMethods != "" {
-			e.allowedMethods += ", "
-		}
-		e.allowedMethods += "GET"
-	}
+	e.addAllowedMethod("GET")
 	return e
 }
 
 func (e *endpoint) POST(handlers ...RequestNode) Endpoint {
 	e.postHandlers = handlers
-	if !(strings.Contains(e.allowedMethods, "POST")) {
-		if e.allowedMethods != "" {
-			e.allowedMethods += ", "
-		}
-		e.allowedMethods += "POST"
-	}
+	e.addAllowedMethod("POST")
 	return e
 }
 
 func (e *endpoint) DELETE(handlers ...RequestNode) Endpoint {
 	e.deleteHandlers = handlers
-	if !(strings.Contains(e.allowedMethods, "DELETE")) {
-		if e.allowedMethods != "" {
-			e.allowedMethods += ", "
-		}
-		e.allowedMethods += "DELETE"
-	}
+	e.addAllowedMethod("DELETE")
 	return e
 }
 
 func (e *endpoint) PUT(handlers ...RequestNode) Endpoint {
 	e.putHandlers = handlers
-	if !(strings.Contains(e.allowedMethods, "PUT")) {
-		if e.allowedMethods != "" {
-			e.allowedMethods += ", "
-		}
-		e.allowedMethods += "PUT"
-	}
+	e.addAllowedMethod("PUT")
 	return e
 }
 
+func (e *endpoint) addAllowedMethod(method string) {
+	if !(strings.Contains(e.allowedMethods, method)) {
+		if e.allowedMethods != "" {
+			e.allowedMethods += ", "
+		}
+		e.allowedMethods += method
+	}
+}
+
 func (e *endpoint) executeEndpointPipeline(w http.ResponseWriter, r *http.Request, handlers []RequestNode) {
-	f := &Flite{res: w, req: r}
+	f := &Flite{res: &statusCacheResponseWriter{ResponseWriter: w}, req: r}
 	for _, handler := range handlers {
-		if handler(f); f.done {
+		if e := handler(f); e != nil {
+			log.Printf("ERROR: %v\n", e)
+		}
+		if f.done {
 			return
+		}
+	}
+	if !f.done {
+		if e := f.Return(); e != nil {
+			log.Printf("ERROR: %v\n", e)
 		}
 	}
 }

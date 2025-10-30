@@ -6,4 +6,4 @@ import (
 
 type RequestHandler = func(http.ResponseWriter, *http.Request)
 
-type RequestNode = func(f *Flite)
+type RequestNode = func(f *Flite) error
