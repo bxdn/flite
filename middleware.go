@@ -9,14 +9,14 @@ import (
 
 type jsonKey struct{}
 
-func (f *F[T]) Body() *T {
+func (f *F[T]) Body() T {
 	var zero T
     switch any(zero).(type) {
 	case Never:
 		panic("Cannot parse body of endpoint with [Never] type!")
 	}
 	val := f.req.Context().Value(jsonKey{})
-	return val.(*T)
+	return val.(T)
 }
 
 func DeserializeBody[T any]() func(f *F[T]) error {
@@ -40,7 +40,7 @@ func Json[T any](f *F[T]) error {
 		}
 		return nil
 	}
-	f.AddContext(jsonKey{}, ptr)
+	f.AddContext(jsonKey{}, *ptr)
 	return nil
 }
 
@@ -51,6 +51,6 @@ func Text[T any](f *F[T]) error {
 	}
 	defer f.req.Body.Close()
 	bodyString := string(bodyBytes)
-	f.AddContext(jsonKey{}, &bodyString)
+	f.AddContext(jsonKey{}, bodyString)
 	return nil
 }
