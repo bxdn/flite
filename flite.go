@@ -22,25 +22,25 @@ func (w *statusCacheResponseWriter) Write(bytes []byte) (int, error) {
 	return w.ResponseWriter.Write(bytes)
 }
 
-type Flite struct {
+type Flite[T any] struct {
 	res *statusCacheResponseWriter
 	req *http.Request
 	done bool
 }
 
-func (f *Flite) SetContext(context context.Context) {
+func (f *Flite[T]) SetContext(context context.Context) {
 	f.req = f.req.WithContext(context)
 }
 
-func (f *Flite) AddContext(key, value any) {
+func (f *Flite[T]) AddContext(key, value any) {
 	newCtx := context.WithValue(f.req.Context(), key, value)
 	f.req = f.req.WithContext(newCtx)
 }
 
-func (f *Flite) Req() *http.Request{
+func (f *Flite[T]) Req() *http.Request{
 	return f.req
 }
 
-func (f *Flite) Res() http.ResponseWriter {
+func (f *Flite[T]) Res() http.ResponseWriter {
 	return f.res
 }

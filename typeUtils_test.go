@@ -16,23 +16,9 @@ func TestGetFromContext(t *testing.T) {
 	ctx := context.WithValue(context.Background(), jsonKey{}, &x)
 	req := &http.Request{}
 	req = req.WithContext(ctx)
-	val, e := Body[int](&Flite{req: req})
-	if e != nil {
-		t.Error(e)
-	}
+	val := (&Flite[int]{req: req}).Body()
 	if *val != 5 {
 		t.Errorf("expected 5, got %d", *val)
-	}
-}
-
-func TestGetFromContextError(t *testing.T) {
-	x := 5
-	ctx := context.WithValue(context.Background(), jsonKey{}, &x)
-	req := &http.Request{}
-	req = req.WithContext(ctx)
-	_, e := Body[string](&Flite{req: req})
-	if e == nil {
-		t.Errorf("expected an error, but did not get one")
 	}
 }
 
