@@ -39,28 +39,29 @@ func (e *endpoint[T]) Handler() RequestHandler {
 	return e.handleRequest
 }
 
-func (e *endpoint[T]) GET(path string, handlers ...RequestNode[T]) *endpoint[T] {
-	e.handlers = handlers
-	e.allowedMethod = "GET"
-	return e
+func GET(path string, handlers ...RequestNode[Never]) *endpoint[Never] {
+	e := endpoint[Never]{path: path, handlers: handlers, allowedMethod: "GET"}
+	return &e
 }
 
-func (e *endpoint[T]) POST(handlers ...RequestNode[T]) *endpoint[T] {
-	e.handlers = handlers
-	e.allowedMethod = "POST"
-	return e
+func POST[T any](path string, handlers ...RequestNode[T]) *endpoint[T] {
+	e := endpoint[T]{path: path, handlers: handlers, allowedMethod: "POST"}
+	return &e
 }
 
-func (e *endpoint[T]) DELETE(handlers ...RequestNode[T]) *endpoint[T] {
-	e.handlers = handlers
-	e.allowedMethod = "DELETE"
-	return e
+func PUT[T any](path string, handlers ...RequestNode[T]) *endpoint[T] {
+	e := endpoint[T]{path: path, handlers: handlers, allowedMethod: "PUT"}
+	return &e
 }
 
-func (e *endpoint[T]) PUT(handlers ...RequestNode[T]) *endpoint[T] {
-	e.handlers = handlers
-	e.allowedMethod = "PUT"
-	return e
+func DELETE(path string, handlers ...RequestNode[Never]) *endpoint[Never] {
+	e := endpoint[Never]{path: path, handlers: handlers, allowedMethod: "DELETE"}
+	return &e
+}
+
+func PATCH[T any](path string, handlers ...RequestNode[T]) *endpoint[T] {
+	e := endpoint[T]{path: path, handlers: handlers, allowedMethod: "PATCH"}
+	return &e
 }
 
 func (e *endpoint[T]) executeEndpointPipeline(w http.ResponseWriter, r *http.Request, handlers []RequestNode[T]) {
