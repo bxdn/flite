@@ -2,6 +2,7 @@ package flite
 
 import (
 	"context"
+	"net/http"
 	"testing"
 )
 
@@ -13,7 +14,9 @@ type test struct {
 func TestGetFromContext(t *testing.T) {
 	x := 5
 	ctx := context.WithValue(context.Background(), jsonKey{}, &x)
-	val, e := GetTypedBody[int](ctx)
+	req := &http.Request{}
+	req = req.WithContext(ctx)
+	val, e := GetTypedBody[int](&Flite{req: req})
 	if e != nil {
 		t.Error(e)
 	}
@@ -25,7 +28,9 @@ func TestGetFromContext(t *testing.T) {
 func TestGetFromContextError(t *testing.T) {
 	x := 5
 	ctx := context.WithValue(context.Background(), jsonKey{}, &x)
-	_, e := GetTypedBody[string](ctx)
+	req := &http.Request{}
+	req = req.WithContext(ctx)
+	_, e := GetTypedBody[string](&Flite{req: req})
 	if e == nil {
 		t.Errorf("expected an error, but did not get one")
 	}

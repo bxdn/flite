@@ -1,7 +1,6 @@
 package flite
 
 import (
-	"context"
 	"encoding/json"
 	"errors"
 	"log"
@@ -10,8 +9,8 @@ import (
 
 type jsonKey struct{}
 
-func GetTypedBody[T any](ctx context.Context) (*T, error) {
-	val := ctx.Value(jsonKey{})
+func GetTypedBody[T any](f *Flite) (*T, error) {
+	val := f.req.Context().Value(jsonKey{})
 	typed, ok := val.(*T)
 	if !ok {
 		return typed, errors.New("type assertion failed")
