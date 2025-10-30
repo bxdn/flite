@@ -5,35 +5,25 @@ import (
 	"net/http"
 )
 
-type Server interface {
-	Register(endpoints ...Endpoint)
-	Serve(port int) error
-}
+var defaultServer server
 
 type server struct {
 	m *http.ServeMux
+	endpoints []Endpoint
 }
 
-// Creates a server using a new serve mux.
-func NewProdServer() Server {
-	s := server{http.NewServeMux()}
-	return &s
-}
-
-// Creates a server using the default serve mux under the hood, exposing the bells and whistles.
-//
-// Not recommended for production.
-func NewDevServer() Server {
-	s := server{http.DefaultServeMux}
-	return &s
-}
-
-func (s *server) Register(endpoints ...Endpoint) {
-	for _, endpoint := range endpoints {
-		s.m.HandleFunc(endpoint.Path(), endpoint.Handler())
+func Serve(port int) error {
+	defaultServer.m = http.NewServeMux()
+	for _, endpoint := range defaultServer.endpoints {
+		defaultServer.m.HandleFunc(endpoint.Path(), endpoint.Handler())
 	}
+	return http.ListenAndServe(fmt.Sprintf(":%d", port), defaultServer.m)
 }
 
-func (s *server) Serve(port int) error {
-	return http.ListenAndServe(fmt.Sprintf(":%d", port), s.m)
+func ServeDebug(port int) error {
+	defaultServer.m = http.DefaultServeMux
+	for _, endpoint := range defaultServer.endpoints {
+		defaultServer.m.HandleFunc(endpoint.Path(), endpoint.Handler())
+	}
+	return http.ListenAndServe(fmt.Sprintf(":%d", port), defaultServer.m)
 }
