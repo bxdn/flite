@@ -11,18 +11,18 @@ type Endpoint interface {
 	Handler() func(http.ResponseWriter, *http.Request)
 }
 
-type never struct{}
+type No struct{}
 
 type endpoint[T any] struct {
-	handlers    		[]func(*Flite[T]) error
+	handlers    		[]func(*F[T]) error
 	allowedMethod, path string
 }
 
 // Creates an endpoint from a given path.
 //
 // Uses ServeMux path syntax.
-func CreateEndpoint(path string) *endpoint[never] {
-	ep := endpoint[never]{path: path}
+func CreateEndpoint(path string) *endpoint[No] {
+	ep := endpoint[No]{path: path}
 	return &ep
 }
 
@@ -39,33 +39,33 @@ func (e *endpoint[T]) Handler() func(http.ResponseWriter, *http.Request) {
 	return e.handleRequest
 }
 
-func GET(path string, handlers ...func(*NoBodyFlite) error) {
-	e := endpoint[never]{path: path, handlers: handlers, allowedMethod: "GET"}
+func GET(path string, handlers ...func(*F[No]) error) {
+	e := endpoint[No]{path: path, handlers: handlers, allowedMethod: "GET"}
 	defaultServer.endpoints = append(defaultServer.endpoints, &e)
 }
 
-func POST[T any](path string, handlers ...func(*Flite[T]) error) {
+func POST[T any](path string, handlers ...func(*F[T]) error) {
 	e := endpoint[T]{path: path, handlers: handlers, allowedMethod: "POST"}
 	defaultServer.endpoints = append(defaultServer.endpoints, &e)
 }
 
-func PUT[T any](path string, handlers ...func(*Flite[T]) error) {
+func PUT[T any](path string, handlers ...func(*F[T]) error) {
 	e := endpoint[T]{path: path, handlers: handlers, allowedMethod: "PUT"}
 	defaultServer.endpoints = append(defaultServer.endpoints, &e)
 }
 
-func DELETE(path string, handlers ...func(*NoBodyFlite) error) {
-	e := endpoint[never]{path: path, handlers: handlers, allowedMethod: "DELETE"}
+func DELETE(path string, handlers ...func(*F[No]) error) {
+	e := endpoint[No]{path: path, handlers: handlers, allowedMethod: "DELETE"}
 	defaultServer.endpoints = append(defaultServer.endpoints, &e)
 }
 
-func PATCH[T any](path string, handlers ...func(*Flite[T]) error) {
+func PATCH[T any](path string, handlers ...func(*F[T]) error) {
 	e := endpoint[T]{path: path, handlers: handlers, allowedMethod: "PATCH"}
 	defaultServer.endpoints = append(defaultServer.endpoints, &e)
 }
 
-func (e *endpoint[T]) executeEndpointPipeline(w http.ResponseWriter, r *http.Request, handlers []func(*Flite[T]) error) {
-	f := &Flite[T]{res: &statusCacheResponseWriter{ResponseWriter: w}, req: r}
+func (e *endpoint[T]) executeEndpointPipeline(w http.ResponseWriter, r *http.Request, handlers []func(*F[T]) error) {
+	f := &F[T]{res: &statusCacheResponseWriter{ResponseWriter: w}, req: r}
 	for _, handler := range handlers {
 		if e := handler(f); e != nil {
 			log.Printf("ERROR: %v\n", e)

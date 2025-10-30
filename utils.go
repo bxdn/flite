@@ -8,7 +8,7 @@ import (
 	"net/http"
 )
 
-func (f *Flite[T]) ReturnText(message string) error {
+func (f *F[T]) ReturnText(message string) error {
 	if f.done {
 		return errors.New("Repsonse already finalized!")
 	}
@@ -25,7 +25,7 @@ func (f *Flite[T]) ReturnText(message string) error {
 	return nil
 }
 
-func (f *Flite[T]) ReturnJSON(object any) error {
+func (f *F[T]) ReturnJSON(object any) error {
 	if f.done {
 		return errors.New("Repsonse already finalized!")
 	}
@@ -50,7 +50,7 @@ func (f *Flite[T]) ReturnJSON(object any) error {
 	return nil
 }
 
-func (f *Flite[T]) ReturnError(message string, status int) error {
+func (f *F[T]) ReturnError(message string, status int) error {
 	if f.done {
 		return errors.New("Repsonse already finalized!")
 	}
@@ -60,7 +60,7 @@ func (f *Flite[T]) ReturnError(message string, status int) error {
 	return nil
 }
 
-func (f *Flite[T]) Return() error {
+func (f *F[T]) Return() error {
 	if f.done {
 		return errors.New("Repsonse already finalized!")
 	}

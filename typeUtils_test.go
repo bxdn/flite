@@ -16,7 +16,7 @@ func TestGetFromContext(t *testing.T) {
 	ctx := context.WithValue(context.Background(), jsonKey{}, &x)
 	req := &http.Request{}
 	req = req.WithContext(ctx)
-	val := (&Flite[int]{req: req}).Body()
+	val := (&F[int]{req: req}).Body()
 	if *val != 5 {
 		t.Errorf("expected 5, got %d", *val)
 	}

@@ -8,7 +8,7 @@ import (
 
 type jsonKey struct{}
 
-func (f *Flite[T]) Body() *T {
+func (f *F[T]) Body() *T {
 	val := f.req.Context().Value(jsonKey{})
 	typed, ok := val.(*T)
 	if !ok {
@@ -17,7 +17,7 @@ func (f *Flite[T]) Body() *T {
 	return typed
 }
 
-func Json[T any](f *Flite[T]) error {
+func Json[T any](f *F[T]) error {
 	ptr := new(T)
 	decoder := json.NewDecoder(f.req.Body)
 	if e := decoder.Decode(ptr); e != nil {
