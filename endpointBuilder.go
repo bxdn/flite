@@ -19,19 +19,6 @@ type endpoint[T any] struct {
 	allowedMethod, path string
 }
 
-// Creates an endpoint from a given path.
-//
-// Uses ServeMux path syntax.
-func CreateEndpoint(path string) *endpoint[Never] {
-	ep := endpoint[Never]{path: path}
-	return &ep
-}
-
-func CreateJsonEndpoint[T any](path string) *endpoint[T] {
-	ep := endpoint[T]{path: path}
-	return &ep
-}
-
 func (e *endpoint[T]) Path() string {
 	return fmt.Sprintf("%s %s", e.allowedMethod, e.path)
 }
@@ -70,9 +57,9 @@ func injectMiddleware[T any](rest []func(*F[T]) error) []func(*F[T]) error {
 	return append(handlers, rest...)
 }
 
-func (e *endpoint[T]) executeEndpointPipeline(w http.ResponseWriter, r *http.Request, handlers []func(*F[T]) error) {
+func (e *endpoint[T]) handleRequest(w http.ResponseWriter, r *http.Request) {
 	f := &F[T]{res: &statusCacheResponseWriter{ResponseWriter: w}, req: r}
-	for _, handler := range handlers {
+	for _, handler := range e.handlers {
 		if e := handler(f); e != nil {
 			log.Printf("ERROR: %v\n", e)
 		}
@@ -85,10 +72,4 @@ func (e *endpoint[T]) executeEndpointPipeline(w http.ResponseWriter, r *http.Req
 			log.Printf("ERROR: %v\n", e)
 		}
 	}
-}
-func (e *endpoint[T]) handleRequest(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Access-Control-Allow-Origin", "*")
-	w.Header().Set("Access-Control-Allow-Headers", "*")
-	w.Header().Set("Access-Control-Allow-Methods", e.allowedMethod)
-	e.executeEndpointPipeline(w, r, e.handlers)
 }
