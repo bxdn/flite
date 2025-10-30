@@ -16,7 +16,7 @@ func TestGetFromContext(t *testing.T) {
 	ctx := context.WithValue(context.Background(), jsonKey{}, &x)
 	req := &http.Request{}
 	req = req.WithContext(ctx)
-	val, e := GetTypedBody[int](&Flite{req: req})
+	val, e := Body[int](&Flite{req: req})
 	if e != nil {
 		t.Error(e)
 	}
@@ -30,7 +30,7 @@ func TestGetFromContextError(t *testing.T) {
 	ctx := context.WithValue(context.Background(), jsonKey{}, &x)
 	req := &http.Request{}
 	req = req.WithContext(ctx)
-	_, e := GetTypedBody[string](&Flite{req: req})
+	_, e := Body[string](&Flite{req: req})
 	if e == nil {
 		t.Errorf("expected an error, but did not get one")
 	}

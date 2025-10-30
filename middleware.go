@@ -3,13 +3,14 @@ package flite
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"log"
 	"net/http"
 )
 
 type jsonKey struct{}
 
-func GetTypedBody[T any](f *Flite) (*T, error) {
+func Body[T any](f *Flite) (*T, error) {
 	val := f.req.Context().Value(jsonKey{})
 	typed, ok := val.(*T)
 	if !ok {
@@ -23,7 +24,9 @@ func Json[T any](f *Flite) error {
 	decoder := json.NewDecoder(f.req.Body)
 	if e := decoder.Decode(ptr); e != nil {
 		log.Println(e)
-		http.Error(f.res, "bad request", http.StatusBadRequest)
+		if e2 := f.ReturnError("Body is not in the correct JSON schema", http.StatusBadRequest); e2 != nil {
+			return fmt.Errorf("Error trying to parse JSON body, then error trying to return that error: %v, %v", e, e2)
+		}
 		return e
 	}
 	f.AddContext(jsonKey{}, ptr)
