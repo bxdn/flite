@@ -6,9 +6,13 @@ import (
 	"strings"
 )
 
-type Endpoint[T any] interface {
+type BasicEndpoint interface {
 	Path() string
 	Handler() RequestHandler
+}
+
+type Endpoint[T any] interface {
+	BasicEndpoint
 	GET(handlers ...RequestNode[T]) Endpoint[T]
 	POST(handlers ...RequestNode[T]) Endpoint[T]
 	DELETE(handlers ...RequestNode[T]) Endpoint[T]

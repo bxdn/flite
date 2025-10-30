@@ -6,7 +6,7 @@ import (
 )
 
 type Server interface {
-	Register(endpoints ...Endpoint[any])
+	Register(endpoints ...BasicEndpoint)
 	Serve(port int) error
 }
 
@@ -28,7 +28,7 @@ func NewDevServer() Server {
 	return &s
 }
 
-func (s *server) Register(endpoints ...Endpoint[any]) {
+func (s *server) Register(endpoints ...BasicEndpoint) {
 	for _, endpoint := range endpoints {
 		s.m.HandleFunc(endpoint.Path(), endpoint.Handler())
 	}
