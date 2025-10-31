@@ -10,9 +10,9 @@ import (
 )
 
 type RequestConfig struct {
-	Url string
+	Url     string
 	Headers map[string]string
-	Query map[string]string
+	Query   map[string]string
 }
 
 type ConfigWithBody struct {
@@ -20,33 +20,22 @@ type ConfigWithBody struct {
 	Body []byte
 }
 
-type fullConfig struct{
+type fullConfig struct {
 	ConfigWithBody
 	Method string
 }
 
-type user struct {
-	name, address string
-}
-
-func main() {
-	u := user{
-		"Sean",
-		"707 Cascade Dr",
+func FromJson[T any](res *http.Response, bodyBytes []byte, e error) (*http.Response, T, error) {
+	ptr := new(T)
+	if e != nil {
+		return res, *ptr, e
 	}
-	_, body, _ := WithJson(UrlToConfig("localhost/user"), u, Post)
-	println(string(body))
+	decoder := json.NewDecoder(bytes.NewBuffer(bodyBytes))
+	e = decoder.Decode(ptr)
+	return res, *ptr, e
 }
 
-func UrlToConfig(url string) RequestConfig {
-	return RequestConfig{Url: url}
-}
-
-func WithText(config RequestConfig, body string, req func(ConfigWithBody) (*http.Response, []byte, error)) (*http.Response, []byte, error) {
-	return req(ConfigWithBody{RequestConfig: config, Body: []byte(body)})
-}
-
-func WithJson(config RequestConfig, object any, req func(ConfigWithBody) (*http.Response, []byte, error)) (*http.Response, []byte, error) {
+func ToJson(config RequestConfig, object any, req func(ConfigWithBody) (*http.Response, []byte, error)) (*http.Response, []byte, error) {
 	jsonBytes, e := json.Marshal(object)
 	if e != nil {
 		return nil, nil, fmt.Errorf("Error Marshalling body to JSON: %w", e)
@@ -78,7 +67,7 @@ func req(config fullConfig) (*http.Response, []byte, error) {
 
 	u, err := url.Parse(config.Url)
 	if err != nil {
-		return nil,nil, fmt.Errorf("Error parsing url: %w", err)
+		return nil, nil, fmt.Errorf("Error parsing url: %w", err)
 	}
 
 	for k, v := range config.Query {
@@ -87,23 +76,23 @@ func req(config fullConfig) (*http.Response, []byte, error) {
 
 	req, err := http.NewRequest(config.Method, u.String(), bytes.NewBuffer(config.Body))
 	if err != nil {
-		return nil,nil, fmt.Errorf("Error creating request: %w", err)
+		return nil, nil, fmt.Errorf("Error creating request: %w", err)
 	}
 
 	for k, v := range config.Headers {
 		req.Header.Set(k, v)
 	}
-	
+
 	client := &http.Client{}
 	resp, err := client.Do(req)
 	if err != nil {
-		return nil,nil, fmt.Errorf("Error executing request: %w", err)
+		return nil, nil, fmt.Errorf("Error executing request: %w", err)
 	}
 
 	defer resp.Body.Close()
 	resBody, err := io.ReadAll(resp.Body)
 	if err != nil {
-		return nil,nil, fmt.Errorf("Error reading response body: %w", err)
+		return nil, nil, fmt.Errorf("Error reading response body: %w", err)
 	}
 
 	return resp, resBody, nil
