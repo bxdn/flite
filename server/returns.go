@@ -26,7 +26,11 @@ func (f *F[T]) ReturnText(message string, status int) error {
 	return nil
 }
 
-func (f *F[T]) ReturnJSON(object any, status int) error {
+func (f *F[T]) ReturnTextOk(message string) error {
+	return f.ReturnText(message, http.StatusOK)
+}
+
+func (f *F[T]) ReturnJson(object any, status int) error {
 	if f.done {
 		return errors.New("Repsonse already finalized!")
 	}
@@ -50,6 +54,10 @@ func (f *F[T]) ReturnJSON(object any, status int) error {
 	log.Printf("%d - %s - %s", status, f.req.Method, f.req.RequestURI)
 	f.done = true
 	return nil
+}
+
+func (f *F[T]) ReturnJsonOk(body any) error {
+	return f.ReturnJson(body, http.StatusOK)
 }
 
 func (f *F[T]) ReturnError(message string, status int) error {
