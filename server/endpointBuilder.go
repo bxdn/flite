@@ -11,11 +11,10 @@ type Endpoint interface {
 	Handler() func(http.ResponseWriter, *http.Request)
 }
 
-type Never struct{}
-type Fn = F[Never]
+type No struct{}
 
 type endpoint[T any] struct {
-	handlers    		[]func(*F[T]) error
+	handlers            []func(*F[T]) error
 	allowedMethod, path string
 }
 
@@ -27,8 +26,8 @@ func (e *endpoint[T]) Handler() func(http.ResponseWriter, *http.Request) {
 	return e.handleRequest
 }
 
-func GET(path string, handlers ...func(*Fn) error) {
-	e := endpoint[Never]{path: path, handlers: injectMiddleware(handlers), allowedMethod: "GET"}
+func GET(path string, handlers ...func(*F[No]) error) {
+	e := endpoint[No]{path: path, handlers: injectMiddleware(handlers), allowedMethod: "GET"}
 	defaultServer.endpoints = append(defaultServer.endpoints, &e)
 }
 
@@ -42,8 +41,8 @@ func PUT[T any](path string, handlers ...func(*F[T]) error) {
 	defaultServer.endpoints = append(defaultServer.endpoints, &e)
 }
 
-func DELETE(path string, handlers ...func(*Fn) error) {
-	e := endpoint[Never]{path: path, handlers: injectMiddleware(handlers), allowedMethod: "DELETE"}
+func DELETE(path string, handlers ...func(*F[No]) error) {
+	e := endpoint[No]{path: path, handlers: injectMiddleware(handlers), allowedMethod: "DELETE"}
 	defaultServer.endpoints = append(defaultServer.endpoints, &e)
 }
 

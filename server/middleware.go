@@ -11,8 +11,8 @@ type jsonKey struct{}
 
 func (f *F[T]) Body() T {
 	var zero T
-    switch any(zero).(type) {
-	case Never:
+	switch any(zero).(type) {
+	case No:
 		panic("Cannot parse body of endpoint with [Never] type!")
 	}
 	val := f.req.Context().Value(jsonKey{})
@@ -21,14 +21,14 @@ func (f *F[T]) Body() T {
 
 func DeserializeBody[T any]() func(f *F[T]) error {
 	var zero T
-    switch any(zero).(type) {
-    case string:
-        return Text
-	case Never:
-		return func(f *F[T]) error{return nil}
-    default:
-        return Json
-    }
+	switch any(zero).(type) {
+	case string:
+		return Text
+	case No:
+		return func(f *F[T]) error { return nil }
+	default:
+		return Json
+	}
 }
 
 func Json[T any](f *F[T]) error {
