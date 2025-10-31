@@ -1,0 +1,110 @@
+package client
+
+import (
+	"bytes"
+	"encoding/json"
+	"fmt"
+	"io"
+	"net/http"
+	"net/url"
+)
+
+type RequestConfig struct {
+	Url string
+	Headers map[string]string
+	Query map[string]string
+}
+
+type ConfigWithBody struct {
+	RequestConfig
+	Body []byte
+}
+
+type fullConfig struct{
+	ConfigWithBody
+	Method string
+}
+
+type user struct {
+	name, address string
+}
+
+func main() {
+	u := user{
+		"Sean",
+		"707 Cascade Dr",
+	}
+	_, body, _ := WithJson(UrlToConfig("localhost/user"), u, Post)
+	println(string(body))
+}
+
+func UrlToConfig(url string) RequestConfig {
+	return RequestConfig{Url: url}
+}
+
+func WithText(config RequestConfig, body string, req func(ConfigWithBody) (*http.Response, []byte, error)) (*http.Response, []byte, error) {
+	return req(ConfigWithBody{RequestConfig: config, Body: []byte(body)})
+}
+
+func WithJson(config RequestConfig, object any, req func(ConfigWithBody) (*http.Response, []byte, error)) (*http.Response, []byte, error) {
+	jsonBytes, e := json.Marshal(object)
+	if e != nil {
+		return nil, nil, fmt.Errorf("Error Marshalling body to JSON: %w", e)
+	}
+	return req(ConfigWithBody{RequestConfig: config, Body: jsonBytes})
+}
+
+func Get(config RequestConfig) (*http.Response, []byte, error) {
+	return req(fullConfig{ConfigWithBody: ConfigWithBody{RequestConfig: config}, Method: "GET"})
+}
+
+func Delete(config RequestConfig) (*http.Response, []byte, error) {
+	return req(fullConfig{ConfigWithBody: ConfigWithBody{RequestConfig: config}, Method: "DELETE"})
+}
+
+func Post(config ConfigWithBody) (*http.Response, []byte, error) {
+	return req(fullConfig{ConfigWithBody: config, Method: "POST"})
+}
+
+func Put(config ConfigWithBody) (*http.Response, []byte, error) {
+	return req(fullConfig{ConfigWithBody: config, Method: "PUT"})
+}
+
+func Patch(config ConfigWithBody) (*http.Response, []byte, error) {
+	return req(fullConfig{ConfigWithBody: config, Method: "PATCH"})
+}
+
+func req(config fullConfig) (*http.Response, []byte, error) {
+
+	u, err := url.Parse(config.Url)
+	if err != nil {
+		return nil,nil, fmt.Errorf("Error parsing url: %w", err)
+	}
+
+	for k, v := range config.Query {
+		u.Query().Set(k, v)
+	}
+
+	req, err := http.NewRequest(config.Method, u.String(), bytes.NewBuffer(config.Body))
+	if err != nil {
+		return nil,nil, fmt.Errorf("Error creating request: %w", err)
+	}
+
+	for k, v := range config.Headers {
+		req.Header.Set(k, v)
+	}
+	
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		return nil,nil, fmt.Errorf("Error executing request: %w", err)
+	}
+
+	defer resp.Body.Close()
+	resBody, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil,nil, fmt.Errorf("Error reading response body: %w", err)
+	}
+
+	return resp, resBody, nil
+}
