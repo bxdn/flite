@@ -19,7 +19,7 @@ func (w *wsep) Handler() func(http.ResponseWriter, *http.Request) { return w.han
 
 func WS(path string, handler func(*websocket.Conn)) {
 	wrapper := func(w http.ResponseWriter, r *http.Request) {
-		c, e := websocket.Accept(w, r, nil)
+		c, e := websocket.Accept(w, r, &websocket.AcceptOptions{InsecureSkipVerify: true})
 		defer c.CloseNow()
 		if e != nil {
 			log.Printf("ERROR accepting websocket connection: %v\n", e)
