@@ -89,8 +89,8 @@ func (e *endpoint[T]) executeEndpointPipeline(w http.ResponseWriter, r *http.Req
 	}
 }
 func (e *endpoint[T]) handleRequest(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Access-Control-Allow-Origin", "*")
-	w.Header().Set("Access-Control-Allow-Headers", "*")
-	w.Header().Set("Access-Control-Allow-Methods", e.allowedMethod)
+	// w.Header().Set("Access-Control-Allow-Origin", "*")
+	// w.Header().Set("Access-Control-Allow-Headers", "*")
+	// w.Header().Set("Access-Control-Allow-Methods", e.allowedMethod)
 	e.executeEndpointPipeline(w, r, e.handlers)
 }
