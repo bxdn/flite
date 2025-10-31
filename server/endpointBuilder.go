@@ -56,7 +56,23 @@ func injectMiddleware[T any](rest []func(*F[T]) error) []func(*F[T]) error {
 	return append(handlers, rest...)
 }
 
+type middleware = func(w http.ResponseWriter, r *http.Request) (error, bool)
+
 func (e *endpoint[T]) executeEndpointPipeline(w http.ResponseWriter, r *http.Request, handlers []func(*F[T]) error) {
+
+	// universal middleware
+	for _, m := range defaultServer.middlewares {
+		e, halt := m(w, r)
+		if e != nil {
+			log.Printf("ERROR: %v\n", e)
+			return
+		}
+		if halt {
+			return
+		}
+	}
+
+	// flite handlers
 	f := &F[T]{res: &statusCacheResponseWriter{ResponseWriter: w}, req: r}
 	for _, handler := range handlers {
 		if e := handler(f); e != nil {
