@@ -1,4 +1,4 @@
-package flite
+package server
 
 import (
 	"fmt"
@@ -23,7 +23,9 @@ func (e *endpoint[T]) Path() string {
 }
 
 func (e *endpoint[T]) Handler() func(http.ResponseWriter, *http.Request) {
-	return e.handleRequest
+	return func(w http.ResponseWriter, r *http.Request) {
+		e.executeEndpointPipeline(w, r, e.handlers)
+	}
 }
 
 func GET(path string, handlers ...func(*F[No]) error) {
@@ -87,10 +89,4 @@ func (e *endpoint[T]) executeEndpointPipeline(w http.ResponseWriter, r *http.Req
 			log.Printf("ERROR: %v\n", e)
 		}
 	}
-}
-func (e *endpoint[T]) handleRequest(w http.ResponseWriter, r *http.Request) {
-	// w.Header().Set("Access-Control-Allow-Origin", "*")
-	// w.Header().Set("Access-Control-Allow-Headers", "*")
-	// w.Header().Set("Access-Control-Allow-Methods", e.allowedMethod)
-	e.executeEndpointPipeline(w, r, e.handlers)
 }
