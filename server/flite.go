@@ -3,6 +3,7 @@ package flite
 import (
 	"context"
 	"net/http"
+	"net/url"
 )
 
 type statusCacheResponseWriter struct {
@@ -23,9 +24,10 @@ func (w *statusCacheResponseWriter) Write(bytes []byte) (int, error) {
 }
 
 type F[T any] struct {
-	res *statusCacheResponseWriter
-	req *http.Request
-	done bool
+	res   *statusCacheResponseWriter
+	req   *http.Request
+	done  bool
+	query url.Values
 }
 
 func (f *F[T]) SetContext(context context.Context) {
@@ -37,7 +39,26 @@ func (f *F[T]) AddContext(key, value any) {
 	f.req = f.req.WithContext(newCtx)
 }
 
-func (f *F[T]) Req() *http.Request{
+func (f *F[T]) Path(key string) string {
+	return f.req.PathValue(key)
+}
+
+func (f *F[T]) Query(key string) string {
+	if f.query == nil {
+		f.query = f.req.URL.Query()
+	}
+	return f.query.Get(key)
+}
+
+func (f *F[T]) Header(key string) string {
+	return f.req.Header.Get(key)
+}
+
+func (f *F[T]) SetHeader(key, value string) {
+	f.res.Header().Set(key, value)
+}
+
+func (f *F[T]) Req() *http.Request {
 	return f.req
 }
 
