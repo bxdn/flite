@@ -8,10 +8,11 @@ import (
 	"net/http"
 )
 
-func (f *F[T]) ReturnText(message string) error {
+func (f *F[T]) ReturnText(message string, status int) error {
 	if f.done {
 		return errors.New("Repsonse already finalized!")
 	}
+	f.res.WriteHeader(status)
 	_, e := f.res.Write([]byte(message))
 	if e != nil {
 		log.Println(e)
@@ -20,12 +21,12 @@ func (f *F[T]) ReturnText(message string) error {
 		}
 		return e
 	}
-	log.Printf("200 - %s - %s", f.req.Method, f.req.RequestURI)
+	log.Printf("%d - %s - %s", status, f.req.Method, f.req.RequestURI)
 	f.done = true
 	return nil
 }
 
-func (f *F[T]) ReturnJSON(object any) error {
+func (f *F[T]) ReturnJSON(object any, status int) error {
 	if f.done {
 		return errors.New("Repsonse already finalized!")
 	}
@@ -37,6 +38,7 @@ func (f *F[T]) ReturnJSON(object any) error {
 		}
 		return e
 	}
+	f.res.WriteHeader(status)
 	_, e = f.res.Write(jsonBytes)
 	if e != nil {
 		log.Println(e)
@@ -45,7 +47,7 @@ func (f *F[T]) ReturnJSON(object any) error {
 		}
 		return e
 	}
-	log.Printf("200 - %s - %s", f.req.Method, f.req.RequestURI)
+	log.Printf("%d - %s - %s", status, f.req.Method, f.req.RequestURI)
 	f.done = true
 	return nil
 }
