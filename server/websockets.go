@@ -1,6 +1,7 @@
 package server
 
 import (
+	"fmt"
 	"log"
 	"net/http"
 
@@ -16,7 +17,7 @@ func (w *wsep) Path() string { return w.path }
 
 func (w *wsep) Handler() func(http.ResponseWriter, *http.Request) { return w.handler }
 
-func WEBSOCK(path string, handler func(*websocket.Conn)) {
+func WS(path string, handler func(*websocket.Conn)) {
 	wrapper := func(w http.ResponseWriter, r *http.Request) {
 		c, e := websocket.Accept(w, r, nil)
 		defer c.CloseNow()
@@ -27,7 +28,7 @@ func WEBSOCK(path string, handler func(*websocket.Conn)) {
 		handler(c)
 	}
 	defaultServer.endpoints = append(defaultServer.endpoints, &wsep{
-		path:    path,
+		path:    fmt.Sprintf("GET %s", path),
 		handler: wrapper,
 	})
 }
