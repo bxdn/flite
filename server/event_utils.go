@@ -2,28 +2,15 @@ package server
 
 import (
 	"fmt"
-	"net/http"
 	"strings"
 
 	"github.com/bxdn/flite/shared"
 )
 
-func (f *F[T]) PrepareAsSSEHandler() error {
+func (f *F[T]) PrepareAsSSEHandler() {
 	f.res.Header().Set("Content-Type", "text/event-stream")
 	f.res.Header().Set("Cache-Control", "no-cache")
 	f.res.Header().Set("Connection", "keep-alive")
-	if _, e := fmt.Fprintf(f.res, ": connected\n\n"); e != nil {
-		f.ReturnError("Error writing to response writer!", http.StatusInternalServerError)
-		return fmt.Errorf("Error: Could not write to response writer?")
-	}
-	f.res.WriteHeader(200)
-	flusher, ok := f.Res().(http.Flusher)
-	if !ok {
-		f.ReturnError("Streaming unsupported!", http.StatusInternalServerError)
-		return fmt.Errorf("Error: Response writer is not a flusher?")
-	}
-	flusher.Flush()
-	return nil
 }
 
 func (f *F[T]) SendEvent(event shared.SSEEvent) error {
