@@ -7,13 +7,15 @@ import (
 	"github.com/bxdn/flite/shared"
 )
 
+type Event = shared.SSEEvent
+
 func (f *F[T]) PrepareAsSSEHandler() {
 	f.res.Header().Set("Content-Type", "text/event-stream")
 	f.res.Header().Set("Cache-Control", "no-cache")
 	f.res.Header().Set("Connection", "keep-alive")
 }
 
-func (f *F[T]) SendEvent(event shared.SSEEvent) error {
+func (f *F[T]) SendEvent(event Event) error {
 	if event.ID != "" {
 		if _, e := fmt.Fprintf(f.res, "id: %s\n", event.ID); e != nil {
 			return fmt.Errorf("Error writing text event id: %w", e)

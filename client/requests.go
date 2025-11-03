@@ -29,6 +29,8 @@ type fullConfig struct {
 	Method string
 }
 
+type Event = shared.SSEEvent
+
 func FromJson[T any](res *http.Response, bodyBytes []byte, e error) (*http.Response, T, error) {
 	ptr := new(T)
 	if e != nil {
@@ -47,7 +49,7 @@ func ToJson(config RequestConfig, object any, req func(ConfigWithBody) (*http.Re
 	return req(ConfigWithBody{RequestConfig: config, Body: jsonBytes})
 }
 
-func Subscribe(config ConfigWithBody, method string, onEvent func(shared.SSEEvent) error) error {
+func Subscribe(config ConfigWithBody, method string, onEvent func(Event) error) error {
 	u, e := url.Parse(config.Url)
 	if e != nil {
 		return fmt.Errorf("Error parsing url: %w", e)
@@ -90,12 +92,12 @@ func Subscribe(config ConfigWithBody, method string, onEvent func(shared.SSEEven
 	}
 }
 
-func receiveEvent(reader *bufio.Reader) (shared.SSEEvent, error) {
+func receiveEvent(reader *bufio.Reader) (Event, error) {
 	var buffer strings.Builder
 	for {
 		line, e := reader.ReadString('\n')
 		if e != nil {
-			return shared.SSEEvent{}, fmt.Errorf("Error reading event: %w", e)
+			return Event{}, fmt.Errorf("Error reading event: %w", e)
 		}
 		if line == "\n" || line == "\r\n" {
 			return parseSSEEvent(buffer.String()), nil
@@ -105,8 +107,8 @@ func receiveEvent(reader *bufio.Reader) (shared.SSEEvent, error) {
 	}
 }
 
-func parseSSEEvent(raw string) shared.SSEEvent {
-	var e shared.SSEEvent
+func parseSSEEvent(raw string) Event {
+	var e Event
 	var dataLines []string
 
 	for _, line := range strings.Split(raw, "\n") {
