@@ -45,8 +45,8 @@ func Json[T any](f *F[T]) error {
 }
 
 func Text[T any](f *F[T]) error {
-	bodyBytes, err := io.ReadAll(f.req.Body)
-	if err != nil {
+	bodyBytes, e := io.ReadAll(f.req.Body)
+	if e != nil {
 		return f.ReturnError("Error reading text request body", http.StatusInternalServerError)
 	}
 	defer f.req.Body.Close()

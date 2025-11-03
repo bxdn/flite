@@ -75,7 +75,12 @@ func (e *endpoint[T]) executeEndpointPipeline(w http.ResponseWriter, r *http.Req
 	}
 
 	// flite handlers
-	f := &F[T]{res: &statusCacheResponseWriter{ResponseWriter: w}, req: r}
+	wf, ok := w.(WriterFlusher)
+	if !ok {
+		log.Printf("ERROR: Response writer is not a flusher", e)
+		return
+	}
+	f := &F[T]{res: &statusCacheResponseWriter{WriterFlusher: wf}, req: r}
 	for _, handler := range handlers {
 		if e := handler(f); e != nil {
 			log.Printf("ERROR: %v\n", e)

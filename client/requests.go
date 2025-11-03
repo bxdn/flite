@@ -48,18 +48,18 @@ func ToJson(config RequestConfig, object any, req func(ConfigWithBody) (*http.Re
 }
 
 func Subscribe(config ConfigWithBody, method string, onEvent func(shared.SSEEvent) error) error {
-	u, err := url.Parse(config.Url)
-	if err != nil {
-		return fmt.Errorf("Error parsing url: %w", err)
+	u, e := url.Parse(config.Url)
+	if e != nil {
+		return fmt.Errorf("Error parsing url: %w", e)
 	}
 
 	for k, v := range config.Query {
 		u.Query().Set(k, v)
 	}
 
-	req, err := http.NewRequest(method, u.String(), bytes.NewBuffer(config.Body))
-	if err != nil {
-		return fmt.Errorf("Error creating request: %w", err)
+	req, e := http.NewRequest(method, u.String(), bytes.NewBuffer(config.Body))
+	if e != nil {
+		return fmt.Errorf("Error creating request: %w", e)
 	}
 
 	for k, v := range config.Headers {
@@ -71,9 +71,9 @@ func Subscribe(config ConfigWithBody, method string, onEvent func(shared.SSEEven
 	req.Header.Set("Connection", "keep-alive")
 
 	client := &http.Client{}
-	resp, err := client.Do(req)
-	if err != nil {
-		return fmt.Errorf("Error executing request: %w", err)
+	resp, e := client.Do(req)
+	if e != nil {
+		return fmt.Errorf("Error executing request: %w", e)
 	}
 
 	reader := bufio.NewReader(resp.Body)
@@ -82,10 +82,10 @@ func Subscribe(config ConfigWithBody, method string, onEvent func(shared.SSEEven
 	for {
 		ev, e := receiveEvent(reader)
 		if e != nil {
-			return fmt.Errorf("Error reading event: %w", err)
+			return fmt.Errorf("Error reading event: %w", e)
 		}
 		if e := onEvent(ev); e != nil {
-			return fmt.Errorf("Error acting on event: %w", err)
+			return fmt.Errorf("Error acting on event: %w", e)
 		}
 	}
 }
@@ -93,9 +93,9 @@ func Subscribe(config ConfigWithBody, method string, onEvent func(shared.SSEEven
 func receiveEvent(reader *bufio.Reader) (shared.SSEEvent, error) {
 	var buffer strings.Builder
 	for {
-		line, err := reader.ReadString('\n')
-		if err != nil {
-			return shared.SSEEvent{}, fmt.Errorf("Error reading event: %w", err)
+		line, e := reader.ReadString('\n')
+		if e != nil {
+			return shared.SSEEvent{}, fmt.Errorf("Error reading event: %w", e)
 		}
 		if line == "\n" || line == "\r\n" {
 			return parseSSEEvent(buffer.String()), nil
@@ -150,18 +150,18 @@ func Patch(config ConfigWithBody) (*http.Response, []byte, error) {
 
 func req(config fullConfig) (*http.Response, []byte, error) {
 
-	u, err := url.Parse(config.Url)
-	if err != nil {
-		return nil, nil, fmt.Errorf("Error parsing url: %w", err)
+	u, e := url.Parse(config.Url)
+	if e != nil {
+		return nil, nil, fmt.Errorf("Error parsing url: %w", e)
 	}
 
 	for k, v := range config.Query {
 		u.Query().Set(k, v)
 	}
 
-	req, err := http.NewRequest(config.Method, u.String(), bytes.NewBuffer(config.Body))
-	if err != nil {
-		return nil, nil, fmt.Errorf("Error creating request: %w", err)
+	req, e := http.NewRequest(config.Method, u.String(), bytes.NewBuffer(config.Body))
+	if e != nil {
+		return nil, nil, fmt.Errorf("Error creating request: %w", e)
 	}
 
 	for k, v := range config.Headers {
@@ -169,15 +169,15 @@ func req(config fullConfig) (*http.Response, []byte, error) {
 	}
 
 	client := &http.Client{}
-	resp, err := client.Do(req)
-	if err != nil {
-		return nil, nil, fmt.Errorf("Error executing request: %w", err)
+	resp, e := client.Do(req)
+	if e != nil {
+		return nil, nil, fmt.Errorf("Error executing request: %w", e)
 	}
 
 	defer resp.Body.Close()
-	resBody, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return nil, nil, fmt.Errorf("Error reading response body: %w", err)
+	resBody, e := io.ReadAll(resp.Body)
+	if e != nil {
+		return nil, nil, fmt.Errorf("Error reading response body: %w", e)
 	}
 
 	return resp, resBody, nil

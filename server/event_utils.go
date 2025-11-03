@@ -27,12 +27,6 @@ func (f *F[T]) PrepareAsSSEHandler() error {
 }
 
 func (f *F[T]) SendEvent(event shared.SSEEvent) error {
-	flusher, ok := f.Res().(http.Flusher)
-	if !ok {
-		f.ReturnError("Streaming unsupported!", http.StatusInternalServerError)
-		return fmt.Errorf("Error: Response writer is not a flusher?")
-	}
-
 	if event.ID != "" {
 		if _, e := fmt.Fprintf(f.res, "id: %s\n", event.ID); e != nil {
 			return fmt.Errorf("Error writing text event id: %w", e)
@@ -56,6 +50,6 @@ func (f *F[T]) SendEvent(event shared.SSEEvent) error {
 	if _, e := fmt.Fprintf(f.res, "\n"); e != nil {
 		return fmt.Errorf("Error writing text event: %w", e)
 	}
-	flusher.Flush()
+	f.res.Flush()
 	return nil
 }

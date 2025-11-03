@@ -6,21 +6,26 @@ import (
 	"net/url"
 )
 
-type statusCacheResponseWriter struct {
+type WriterFlusher interface {
 	http.ResponseWriter
+	http.Flusher
+}
+
+type statusCacheResponseWriter struct {
+	WriterFlusher
 	status int
 }
 
 func (w *statusCacheResponseWriter) WriteHeader(status int) {
 	w.status = status
-	w.ResponseWriter.WriteHeader(status)
+	w.WriterFlusher.WriteHeader(status)
 }
 
 func (w *statusCacheResponseWriter) Write(bytes []byte) (int, error) {
 	if w.status == 0 {
 		w.status = 200
 	}
-	return w.ResponseWriter.Write(bytes)
+	return w.WriterFlusher.Write(bytes)
 }
 
 type F[T any] struct {
@@ -62,6 +67,6 @@ func (f *F[T]) Req() *http.Request {
 	return f.req
 }
 
-func (f *F[T]) Res() http.ResponseWriter {
+func (f *F[T]) Res() WriterFlusher {
 	return f.res
 }
