@@ -1,10 +1,11 @@
 package server
 
 import (
-	"bufio"
 	"fmt"
 	"net/http"
 	"strings"
+
+	"github.com/bxdn/flite/shared"
 )
 
 func (f *F[T]) PrepareAsSSEHandler() error {
@@ -25,7 +26,7 @@ func (f *F[T]) PrepareAsSSEHandler() error {
 	return nil
 }
 
-func (f *F[T]) SendEvent(event SSEEvent) error {
+func (f *F[T]) SendEvent(event shared.SSEEvent) error {
 	flusher, ok := f.Res().(http.Flusher)
 	if !ok {
 		f.ReturnError("Streaming unsupported!", http.StatusInternalServerError)
@@ -57,48 +58,4 @@ func (f *F[T]) SendEvent(event SSEEvent) error {
 	}
 	flusher.Flush()
 	return nil
-}
-
-func ReceiveEvent(reader *bufio.Reader) (SSEEvent, error) {
-	var buffer strings.Builder
-	for {
-		line, err := reader.ReadString('\n')
-		if err != nil {
-			return SSEEvent{}, fmt.Errorf("Error reading event: %w", err)
-		}
-		if line == "\n" || line == "\r\n" {
-			return parseSSEEvent(buffer.String()), nil
-		} else {
-			buffer.WriteString(line)
-		}
-	}
-}
-
-type SSEEvent struct {
-	Event string
-	Data  string
-	ID    string
-}
-
-func parseSSEEvent(raw string) SSEEvent {
-	var e SSEEvent
-	var dataLines []string
-
-	for _, line := range strings.Split(raw, "\n") {
-		line = strings.TrimSpace(line)
-		switch {
-		case strings.HasPrefix(line, "event: "):
-			e.Event = strings.TrimPrefix(line, "event: ")
-		case strings.HasPrefix(line, "data: "):
-			dataLines = append(dataLines, strings.TrimPrefix(line, "data: "))
-		case strings.HasPrefix(line, "id: "):
-			e.ID = strings.TrimPrefix(line, "id: ")
-		}
-	}
-
-	if len(dataLines) > 0 {
-		e.Data = strings.Join(dataLines, "")
-	}
-
-	return e
 }

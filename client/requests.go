@@ -1,12 +1,16 @@
 package client
 
 import (
+	"bufio"
 	"bytes"
 	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
 	"net/url"
+	"strings"
+
+	"github.com/bxdn/flite/shared"
 )
 
 type RequestConfig struct {
@@ -41,6 +45,87 @@ func ToJson(config RequestConfig, object any, req func(ConfigWithBody) (*http.Re
 		return nil, nil, fmt.Errorf("Error Marshalling body to JSON: %w", e)
 	}
 	return req(ConfigWithBody{RequestConfig: config, Body: jsonBytes})
+}
+
+func Subscribe(config ConfigWithBody, method string, onEvent func(shared.SSEEvent) error) error {
+	u, err := url.Parse(config.Url)
+	if err != nil {
+		return fmt.Errorf("Error parsing url: %w", err)
+	}
+
+	for k, v := range config.Query {
+		u.Query().Set(k, v)
+	}
+
+	req, err := http.NewRequest(method, u.String(), bytes.NewBuffer(config.Body))
+	if err != nil {
+		return fmt.Errorf("Error creating request: %w", err)
+	}
+
+	for k, v := range config.Headers {
+		req.Header.Set(k, v)
+	}
+
+	req.Header.Set("Accept", "text/event-stream")
+	req.Header.Set("Cache-Control", "no-cache")
+	req.Header.Set("Connection", "keep-alive")
+
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		return fmt.Errorf("Error executing request: %w", err)
+	}
+
+	reader := bufio.NewReader(resp.Body)
+	defer resp.Body.Close()
+
+	for {
+		ev, e := receiveEvent(reader)
+		if e != nil {
+			return fmt.Errorf("Error reading event: %w", err)
+		}
+		if e := onEvent(ev); e != nil {
+			return fmt.Errorf("Error acting on event: %w", err)
+		}
+	}
+}
+
+func receiveEvent(reader *bufio.Reader) (shared.SSEEvent, error) {
+	var buffer strings.Builder
+	for {
+		line, err := reader.ReadString('\n')
+		if err != nil {
+			return shared.SSEEvent{}, fmt.Errorf("Error reading event: %w", err)
+		}
+		if line == "\n" || line == "\r\n" {
+			return parseSSEEvent(buffer.String()), nil
+		} else {
+			buffer.WriteString(line)
+		}
+	}
+}
+
+func parseSSEEvent(raw string) shared.SSEEvent {
+	var e shared.SSEEvent
+	var dataLines []string
+
+	for _, line := range strings.Split(raw, "\n") {
+		line = strings.TrimSpace(line)
+		switch {
+		case strings.HasPrefix(line, "event: "):
+			e.Event = strings.TrimPrefix(line, "event: ")
+		case strings.HasPrefix(line, "data: "):
+			dataLines = append(dataLines, strings.TrimPrefix(line, "data: "))
+		case strings.HasPrefix(line, "id: "):
+			e.ID = strings.TrimPrefix(line, "id: ")
+		}
+	}
+
+	if len(dataLines) > 0 {
+		e.Data = strings.Join(dataLines, "")
+	}
+
+	return e
 }
 
 func Get(config RequestConfig) (*http.Response, []byte, error) {
