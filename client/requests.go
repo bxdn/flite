@@ -119,7 +119,7 @@ func parseSSEEvent(raw string) Event {
 		case strings.HasPrefix(line, "data: "):
 			dataLines = append(dataLines, strings.TrimPrefix(line, "data: "))
 		case strings.HasPrefix(line, "id: "):
-			e.ID = strings.TrimPrefix(line, "id: ")
+			e.Id = strings.TrimPrefix(line, "id: ")
 		}
 	}
 
