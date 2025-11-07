@@ -62,11 +62,22 @@ type middleware = func(w http.ResponseWriter, r *http.Request) (error, bool)
 
 func (e *endpoint[T]) executeEndpointPipeline(w http.ResponseWriter, r *http.Request, handlers []func(*F[T]) error) {
 
+	// flite handlers
+	wf, ok := w.(WriterFlusher)
+	if !ok {
+		log.Printf("ERROR: Response writer is not a flusher", e)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	f := &F[T]{res: &statusCacheResponseWriter{WriterFlusher: wf}, req: r}
+
 	// universal middleware
 	for _, m := range defaultServer.middlewares {
 		e, halt := m(w, r)
 		if e != nil {
 			log.Printf("ERROR: %v\n", e)
+			f.ReturnError("Error in middleware", http.StatusInternalServerError)
 			return
 		}
 		if halt {
@@ -74,16 +85,10 @@ func (e *endpoint[T]) executeEndpointPipeline(w http.ResponseWriter, r *http.Req
 		}
 	}
 
-	// flite handlers
-	wf, ok := w.(WriterFlusher)
-	if !ok {
-		log.Printf("ERROR: Response writer is not a flusher", e)
-		return
-	}
-	f := &F[T]{res: &statusCacheResponseWriter{WriterFlusher: wf}, req: r}
 	for _, handler := range handlers {
 		if e := handler(f); e != nil {
 			log.Printf("ERROR: %v\n", e)
+			f.ReturnError("Error in handler", http.StatusInternalServerError)
 		}
 		if f.done {
 			return
@@ -92,6 +97,7 @@ func (e *endpoint[T]) executeEndpointPipeline(w http.ResponseWriter, r *http.Req
 	if !f.done {
 		if e := f.Return(); e != nil {
 			log.Printf("ERROR: %v\n", e)
+			f.ReturnError("Error returning", http.StatusInternalServerError)
 		}
 	}
 }
