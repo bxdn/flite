@@ -10,16 +10,12 @@ import (
 
 func (f *F[T]) ReturnText(message string, status int) error {
 	if f.done {
-		return errors.New("Repsonse already finalized!")
+		return errors.New("response already finalized")
 	}
 	f.res.WriteHeader(status)
 	_, e := f.res.Write([]byte(message))
 	if e != nil {
-		log.Println(e)
-		if e2 := f.ReturnError("internal server error", http.StatusInternalServerError); e2 != nil {
-			return fmt.Errorf("Error trying to return text, then error trying to return that error: %v, %v", e, e2)
-		}
-		return e
+		return fmt.Errorf("error writing text body: %w", e)
 	}
 	log.Printf("%d - %s - %s", status, f.req.Method, f.req.RequestURI)
 	f.done = true
@@ -32,24 +28,20 @@ func (f *F[T]) ReturnTextOk(message string) error {
 
 func (f *F[T]) ReturnJson(object any, status int) error {
 	if f.done {
-		return errors.New("Repsonse already finalized!")
+		return errors.New("repsonse already finalized")
 	}
 	jsonBytes, e := json.Marshal(object)
 	if e != nil {
 		log.Println(e)
 		if e2 := f.ReturnError("internal server error", http.StatusInternalServerError); e2 != nil {
-			return fmt.Errorf("Error trying to return text, then error trying to return that error: %v, %v", e, e2)
+			return fmt.Errorf("error trying to return text, then error trying to return that error: %v, %v", e, e2)
 		}
 		return e
 	}
 	f.res.WriteHeader(status)
 	_, e = f.res.Write(jsonBytes)
 	if e != nil {
-		log.Println(e)
-		if e2 := f.ReturnError("internal server error", http.StatusInternalServerError); e2 != nil {
-			return fmt.Errorf("Error trying to return text, then error trying to return that error: %v, %v", e, e2)
-		}
-		return e
+		return fmt.Errorf("error writing json body: %w", e)
 	}
 	log.Printf("%d - %s - %s", status, f.req.Method, f.req.RequestURI)
 	f.done = true
@@ -62,7 +54,7 @@ func (f *F[T]) ReturnJsonOk(body any) error {
 
 func (f *F[T]) ReturnError(message string, status int) error {
 	if f.done {
-		return errors.New("Repsonse already finalized!")
+		return errors.New("response already finalized")
 	}
 	http.Error(f.res, message, status)
 	log.Printf("%d - %s - %s", status, f.req.Method, f.req.RequestURI)
@@ -72,7 +64,7 @@ func (f *F[T]) ReturnError(message string, status int) error {
 
 func (f *F[T]) Return() error {
 	if f.done {
-		return errors.New("Repsonse already finalized!")
+		return errors.New("repsonse already finalized")
 	}
 	if f.res.status == 0 {
 		f.res.WriteHeader(http.StatusOK)

@@ -8,7 +8,6 @@ import (
 var defaultServer server
 
 type server struct {
-	m           *http.ServeMux
 	endpoints   []Endpoint
 	middlewares []middleware
 }
@@ -18,20 +17,18 @@ func Use(mid ...middleware) {
 }
 
 func Serve(port int) error {
-	defaultServer.m = http.NewServeMux()
-	return serveMux(port)
+	return serveMux(http.NewServeMux(), port)
 }
 
 func ServeDebug(port int) error {
-	defaultServer.m = http.DefaultServeMux
-	return serveMux(port)
+	return serveMux(http.DefaultServeMux, port)
 }
 
-func serveMux(port int) error {
+func serveMux(mux *http.ServeMux, port int) error {
 	for _, endpoint := range defaultServer.endpoints {
-		defaultServer.m.HandleFunc(endpoint.Path(), endpoint.Handler())
+		mux.HandleFunc(endpoint.Path(), endpoint.Handler())
 	}
-	return http.ListenAndServe(fmt.Sprintf(":%d", port), getHandler(defaultServer.m))
+	return http.ListenAndServe(fmt.Sprintf(":%d", port), getHandler(mux))
 }
 
 func getHandler(mux *http.ServeMux) http.HandlerFunc {

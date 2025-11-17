@@ -65,7 +65,7 @@ func (e *endpoint[T]) executeEndpointPipeline(w http.ResponseWriter, r *http.Req
 	// flite handlers
 	wf, ok := w.(WriterFlusher)
 	if !ok {
-		log.Printf("ERROR: Response writer is not a flusher", e)
+		log.Printf("ERROR: Response writer is not a flusher")
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}

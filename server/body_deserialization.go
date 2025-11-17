@@ -13,7 +13,7 @@ func (f *F[T]) Body() T {
 	var zero T
 	switch any(zero).(type) {
 	case No:
-		panic("Cannot parse body of endpoint with [Never] type!")
+		panic("Cannot parse body of endpoint with [No] type!")
 	}
 	val := f.req.Context().Value(jsonKey{})
 	return val.(T)
@@ -36,7 +36,7 @@ func Json[T any](f *F[T]) error {
 	decoder := json.NewDecoder(f.req.Body)
 	if e := decoder.Decode(ptr); e != nil {
 		if e2 := f.ReturnError("Body is not in the correct JSON schema", http.StatusBadRequest); e2 != nil {
-			return fmt.Errorf("Error returning bad request error: %v", e2)
+			return fmt.Errorf("error returning bad request error: %v", e2)
 		}
 		return nil
 	}
@@ -47,7 +47,7 @@ func Json[T any](f *F[T]) error {
 func Text[T any](f *F[T]) error {
 	bodyBytes, e := io.ReadAll(f.req.Body)
 	if e != nil {
-		return f.ReturnError("Error reading text request body", http.StatusInternalServerError)
+		return f.ReturnError("error reading text request body", http.StatusInternalServerError)
 	}
 	defer f.req.Body.Close()
 	bodyString := string(bodyBytes)

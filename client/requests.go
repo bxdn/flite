@@ -5,7 +5,6 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"io"
 	"net/http"
 	"net/url"
 	"strings"
@@ -31,20 +30,21 @@ type fullConfig struct {
 
 type Event = shared.SSEEvent
 
-func FromJson[T any](res *http.Response, bodyBytes []byte, e error) (*http.Response, T, error) {
+func FromJson[T any](res *http.Response, e error) (*http.Response, T, error) {
+	defer res.Body.Close()
 	ptr := new(T)
 	if e != nil {
 		return res, *ptr, e
 	}
-	decoder := json.NewDecoder(bytes.NewBuffer(bodyBytes))
+	decoder := json.NewDecoder(res.Body)
 	e = decoder.Decode(ptr)
 	return res, *ptr, e
 }
 
-func ToJson(config RequestConfig, object any, req func(ConfigWithBody) (*http.Response, []byte, error)) (*http.Response, []byte, error) {
+func ToJson(config RequestConfig, object any, req func(ConfigWithBody) (*http.Response, error)) (*http.Response, error) {
 	jsonBytes, e := json.Marshal(object)
 	if e != nil {
-		return nil, nil, fmt.Errorf("Error Marshalling body to JSON: %w", e)
+		return nil, fmt.Errorf("error marshalling body to JSON: %w", e)
 	}
 	return req(ConfigWithBody{RequestConfig: config, Body: jsonBytes})
 }
@@ -52,16 +52,17 @@ func ToJson(config RequestConfig, object any, req func(ConfigWithBody) (*http.Re
 func Subscribe(config ConfigWithBody, method string, onEvent func(Event) error) error {
 	u, e := url.Parse(config.Url)
 	if e != nil {
-		return fmt.Errorf("Error parsing url: %w", e)
+		return fmt.Errorf("error parsing url: %w", e)
 	}
 
+	q := u.Query()
 	for k, v := range config.Query {
-		u.Query().Set(k, v)
+		q.Set(k, v)
 	}
-
+	u.RawQuery = q.Encode()
 	req, e := http.NewRequest(method, u.String(), bytes.NewBuffer(config.Body))
 	if e != nil {
-		return fmt.Errorf("Error creating request: %w", e)
+		return fmt.Errorf("error creating request: %w", e)
 	}
 
 	for k, v := range config.Headers {
@@ -75,7 +76,7 @@ func Subscribe(config ConfigWithBody, method string, onEvent func(Event) error) 
 	client := &http.Client{}
 	resp, e := client.Do(req)
 	if e != nil {
-		return fmt.Errorf("Error executing request: %w", e)
+		return fmt.Errorf("error executing request: %w", e)
 	}
 
 	reader := bufio.NewReader(resp.Body)
@@ -84,10 +85,10 @@ func Subscribe(config ConfigWithBody, method string, onEvent func(Event) error) 
 	for {
 		ev, e := receiveEvent(reader)
 		if e != nil {
-			return fmt.Errorf("Error reading event: %w", e)
+			return fmt.Errorf("error reading event: %w", e)
 		}
 		if e := onEvent(ev); e != nil {
-			return fmt.Errorf("Error acting on event: %w", e)
+			return fmt.Errorf("error acting on event: %w", e)
 		}
 	}
 }
@@ -97,7 +98,7 @@ func receiveEvent(reader *bufio.Reader) (Event, error) {
 	for {
 		line, e := reader.ReadString('\n')
 		if e != nil {
-			return Event{}, fmt.Errorf("Error reading event: %w", e)
+			return Event{}, fmt.Errorf("error reading event: %w", e)
 		}
 		if line == "\n" || line == "\r\n" {
 			return parseSSEEvent(buffer.String()), nil
@@ -126,44 +127,45 @@ func parseSSEEvent(raw string) Event {
 	if len(dataLines) > 0 {
 		e.Data = strings.Join(dataLines, "")
 	}
-
 	return e
 }
 
-func Get(config RequestConfig) (*http.Response, []byte, error) {
+func Get(config RequestConfig) (*http.Response, error) {
 	return req(fullConfig{ConfigWithBody: ConfigWithBody{RequestConfig: config}, Method: "GET"})
 }
 
-func Delete(config RequestConfig) (*http.Response, []byte, error) {
+func Delete(config RequestConfig) (*http.Response, error) {
 	return req(fullConfig{ConfigWithBody: ConfigWithBody{RequestConfig: config}, Method: "DELETE"})
 }
 
-func Post(config ConfigWithBody) (*http.Response, []byte, error) {
+func Post(config ConfigWithBody) (*http.Response, error) {
 	return req(fullConfig{ConfigWithBody: config, Method: "POST"})
 }
 
-func Put(config ConfigWithBody) (*http.Response, []byte, error) {
+func Put(config ConfigWithBody) (*http.Response, error) {
 	return req(fullConfig{ConfigWithBody: config, Method: "PUT"})
 }
 
-func Patch(config ConfigWithBody) (*http.Response, []byte, error) {
+func Patch(config ConfigWithBody) (*http.Response, error) {
 	return req(fullConfig{ConfigWithBody: config, Method: "PATCH"})
 }
 
-func req(config fullConfig) (*http.Response, []byte, error) {
+func req(config fullConfig) (*http.Response, error) {
 
 	u, e := url.Parse(config.Url)
 	if e != nil {
-		return nil, nil, fmt.Errorf("Error parsing url: %w", e)
+		return nil, fmt.Errorf("error parsing url: %w", e)
 	}
 
+	q := u.Query()
 	for k, v := range config.Query {
-		u.Query().Set(k, v)
+		q.Set(k, v)
 	}
+	u.RawQuery = q.Encode()
 
 	req, e := http.NewRequest(config.Method, u.String(), bytes.NewBuffer(config.Body))
 	if e != nil {
-		return nil, nil, fmt.Errorf("Error creating request: %w", e)
+		return nil, fmt.Errorf("error creating request: %w", e)
 	}
 
 	for k, v := range config.Headers {
@@ -173,14 +175,8 @@ func req(config fullConfig) (*http.Response, []byte, error) {
 	client := &http.Client{}
 	resp, e := client.Do(req)
 	if e != nil {
-		return nil, nil, fmt.Errorf("Error executing request: %w", e)
+		return nil, fmt.Errorf("error executing request: %w", e)
 	}
 
-	defer resp.Body.Close()
-	resBody, e := io.ReadAll(resp.Body)
-	if e != nil {
-		return nil, nil, fmt.Errorf("Error reading response body: %w", e)
-	}
-
-	return resp, resBody, nil
+	return resp, nil
 }
